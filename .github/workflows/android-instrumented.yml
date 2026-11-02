@@ -1,0 +1,77 @@
+name: Android device tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - ".github/workflows/android-instrumented.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android-instrumented.yml"
+
+concurrency:
+  group: android-device-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  instrumented:
+    name: Instrumented UI tests (API 36 emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make wrapper executable
+        run: chmod +x android/gradlew
+
+      # GitHub-hosted Linux runners expose /dev/kvm, which the x86_64 emulator
+      # needs for hardware acceleration. Without this udev rule the emulator
+      # falls back to software rendering and often fails to boot in time.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-boot-timeout: 900
+          emulator-options: >-
+            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+            -camera-back none -camera-front none
+          script: cd android && ./gradlew :app:connectedDebugAndroidTest --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-instrumented-results
+          path: |
+            android/app/build/reports/androidTests/
+            android/app/build/outputs/androidTest-results/
+          if-no-files-found: ignore
+          retention-days: 14

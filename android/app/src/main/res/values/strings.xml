@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SmartMe</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_home">Home</string>
+    <string name="tab_explore">Explore</string>
+    <string name="tab_practice">Practice</string>
+    <string name="tab_progress">Progress</string>
+    <string name="tab_profile">Profile</string>
+
+    <!-- Shared states -->
+    <string name="action_retry">Try again</string>
+    <string name="offline_message">You are offline. Some content may be out of date.</string>
+
+    <!-- Home -->
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_greeting_day">Hello</string>
+    <string name="home_subtitle">Small steps every day add up. Here is where your learning starts.</string>
+    <string name="home_status_title">Connection</string>
+    <string name="home_status_loading">Checking the SmartMe service…</string>
+    <string name="home_status_connected">Connected to %1$s</string>
+    <string name="home_status_version">Version %1$s</string>
+    <string name="home_status_unknown">The service did not report a status.</string>
+    <string name="home_status_unreachable">SmartMe is not reachable right now.</string>
+    <string name="home_card_plan_title">Your daily plan</string>
+    <string name="home_card_plan_body">Lessons, quizzes and practice sets will appear here once your plan is ready.</string>
+    <string name="home_card_rewards_title">XP and streaks</string>
+    <string name="home_card_rewards_body">Earn XP for every quiz, keep your streak alive, and follow your growth in the Progress tab.</string>
+
+    <!-- Placeholder tabs -->
+    <string name="placeholder_note">Coming in a later build</string>
+    <string name="explore_title">Explore</string>
+    <string name="explore_placeholder">Browse every subject and course in the SmartMe library, then start from wherever you are.</string>
+    <string name="practice_title">Practice</string>
+    <string name="practice_placeholder">Short quizzes and spaced review will live here, so a few minutes a day is enough.</string>
+    <string name="progress_title">Progress</string>
+    <string name="progress_placeholder">Your XP, streak, quiz history and weak topics will be summarised here.</string>
+
+    <!-- Splash -->
+    <string name="splash_tagline">Small Lessons. Big Futures.</string>
+
+    <!-- Welcome -->
+    <string name="welcome_title">Build real skills for a better future</string>
+    <string name="welcome_tagline">Short lessons, practical practice and daily progress.</string>
+    <string name="welcome_get_started">Get Started</string>
+    <string name="welcome_have_account">I already have an account</string>
+
+    <!-- Authentication -->
+    <string name="auth_sign_in_title">Welcome back</string>
+    <string name="auth_sign_in_subtitle">Sign in to pick up where you left off.</string>
+    <string name="auth_register_title">Create your account</string>
+    <string name="auth_register_subtitle">Save your plan and keep your progress on every device.</string>
+    <string name="auth_create_subtitle">Start your learning journey with SmartMe</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_name_label">Name (optional)</string>
+    <string name="auth_confirm_password_label">Confirm password</string>
+    <string name="auth_show_password">Show password</string>
+    <string name="auth_hide_password">Hide password</string>
+    <string name="auth_sign_in_action">Sign in</string>
+    <string name="auth_register_action">Create account</string>
+    <string name="auth_continue_google">Continue with Google</string>
+    <string name="auth_continue_email">Continue with Email</string>
+    <string name="auth_sign_up_email">Sign Up with Email</string>
+    <string name="auth_or">or</string>
+    <string name="auth_no_account">New to SmartMe?</string>
+    <string name="auth_create_account">Create an account</string>
+    <string name="auth_have_account">Already have an account?</string>
+    <string name="auth_login">Login</string>
+    <string name="auth_password_helper">At least 8 characters with a letter and a number.</string>
+    <string name="auth_accept_terms">I agree to the Terms of Service</string>
+    <string name="auth_accept_privacy">I agree to the Privacy Policy</string>
+    <string name="auth_consent_title">Before you continue</string>
+    <string name="auth_consent_body">To create your SmartMe account with Google, please accept the Terms of Service and Privacy Policy.</string>
+    <string name="auth_consent_accept">Accept and continue</string>
+    <string name="auth_consent_cancel">Not now</string>
+    <string name="auth_back">Back</string>
+    <string name="auth_error_email_required">Enter your email address.</string>
+    <string name="auth_error_email_invalid">Enter a valid email address.</string>
+    <string name="auth_error_password_required">Enter your password.</string>
+    <string name="auth_error_password_length">Use at least 8 characters.</string>
+    <string name="auth_error_password_too_long">Use no more than 128 characters.</string>
+    <string name="auth_error_password_complexity">Include at least one letter and one number.</string>
+    <string name="auth_error_confirm_required">Confirm your password.</string>
+    <string name="auth_error_password_mismatch">Passwords do not match.</string>
+    <string name="auth_error_name_too_long">Use 80 characters or fewer.</string>
+    <string name="auth_error_invalid_credentials">Email or password is incorrect.</string>
+    <string name="auth_error_accept_terms">Accept the Terms of Service and Privacy Policy to continue.</string>
+    <string name="auth_error_google">Google sign-in didn’t complete. Please try again.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_progress">%1$d of %2$d</string>
+    <string name="onboarding_continue">Next</string>
+    <string name="onboarding_finish">Start learning</string>
+    <string name="onboarding_continue_to_account">Continue to create your account</string>
+    <string name="onboarding_step_goal_title">What do you want to achieve?</string>
+    <string name="onboarding_step_goal_subtitle">Choose your primary learning goal.</string>
+    <string name="onboarding_step_proficiency_title">What’s your current English level?</string>
+    <string name="onboarding_step_proficiency_subtitle">This helps us suggest the right lessons for you.</string>
+    <string name="onboarding_step_language_title">Choose your explanation language</string>
+    <string name="onboarding_step_language_subtitle">Get lessons in English with supportive explanations.</string>
+    <string name="onboarding_step_daily_title">Set your daily learning goal</string>
+    <string name="onboarding_step_daily_subtitle">A small, consistent goal builds big results.</string>
+    <string name="onboarding_step_interests_title">What are you interested in?</string>
+    <string name="onboarding_step_interests_subtitle">Select one or more topics to personalize your learning.</string>
+    <string name="goal_improve_english">Improve my English</string>
+    <string name="goal_interview_prep">Prepare for interviews</string>
+    <string name="goal_career_skills">Develop career skills</string>
+    <string name="goal_confidence">Build confidence &amp; communication</string>
+    <string name="proficiency_beginner">Beginner</string>
+    <string name="proficiency_beginner_description">I’m just getting started.</string>
+    <string name="proficiency_elementary">Elementary</string>
+    <string name="proficiency_elementary_description">I can understand simple English.</string>
+    <string name="proficiency_intermediate">Intermediate</string>
+    <string name="proficiency_intermediate_description">I can communicate in common situations.</string>
+    <string name="proficiency_advanced">Advanced</string>
+    <string name="proficiency_advanced_description">I’m comfortable with English.</string>
+    <string name="language_hinglish">English + Hindi</string>
+    <string name="language_hinglish_description">Recommended · explanations in Hindi</string>
+    <string name="language_english">English only</string>
+    <string name="language_english_description">Best if you think in English</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_hindi_description">Explanations in Hindi</string>
+    <string name="daily_goal_5">5 minutes / day</string>
+    <string name="daily_goal_5_description">Quick and easy to maintain</string>
+    <string name="daily_goal_10">10 minutes / day</string>
+    <string name="daily_goal_10_description">A balanced goal</string>
+    <string name="daily_goal_15">15 minutes / day</string>
+    <string name="daily_goal_15_description">Make faster progress</string>
+    <string name="interest_english_speaking">English Communication</string>
+    <string name="interest_interviews">Interview Preparation</string>
+    <string name="interest_workplace">Workplace Skills</string>
+    <string name="interest_money_basics">Financial Literacy</string>
+    <string name="interest_confidence">Confidence Building</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_account_title">Account</string>
+    <string name="profile_signed_in_as">Signed in as</string>
+    <string name="profile_sign_out">Sign out</string>
+    <string name="profile_learning_title">Learning preferences</string>
+    <string name="profile_learning_body">Edit your goal, level, language and daily target in an upcoming update.</string>
+</resources>

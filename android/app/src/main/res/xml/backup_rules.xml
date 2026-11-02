@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 11 and below (API < 31) legacy full backup rules.
+    The session tokens are encrypted with a Keystore key that is never backed up,
+    so restoring the ciphertext would only produce undecryptable data. Exclude it.
+-->
+<full-backup-content>
+    <exclude domain="file" path="datastore/smartme_tokens.preferences_pb" />
+</full-backup-content>

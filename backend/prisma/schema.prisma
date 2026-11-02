@@ -1,0 +1,1096 @@
+// SmartMe database schema
+// PostgreSQL + Prisma. Entity groups match docs/PRD.md §11.3:
+// Identity, Learning Content, Learning Activity, Monetization, Administration.
+//
+// Conventions:
+// - IDs are opaque cuids, never sequential database IDs.
+// - Timestamps are stored in UTC; local-day logic uses the user's/app's time zone.
+// - Idempotency is enforced with unique constraints (see XPTransaction,
+//   LessonProgress, QuizAttempt, BillingEvent, DailyChallengeCompletion).
+// - Tables are snake_case; Prisma fields stay camelCase.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum LearningGoal {
+  IMPROVE_ENGLISH
+  INTERVIEW_PREPARATION
+  CAREER_SKILLS
+  CONFIDENCE_COMMUNICATION
+}
+
+enum ProficiencyLevel {
+  BEGINNER
+  ELEMENTARY
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ContentLanguage {
+  ENGLISH
+  HINDI
+  HINGLISH
+}
+
+enum PublicationStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AccessTier {
+  FREE
+  PREMIUM
+}
+
+enum ContentBlockType {
+  HEADING
+  PARAGRAPH
+  BULLET_LIST
+  CALLOUT
+  IMAGE
+  AUDIO
+  VIDEO
+  EXAMPLE_CONVERSATION
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  RECAP
+  COMPLETION
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  TRUE_FALSE
+  SCENARIO
+}
+
+enum QuizKind {
+  LESSON
+  DAILY_CHALLENGE
+  PRACTICE
+}
+
+enum LessonProgressStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum QuizAttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  ABANDONED
+}
+
+enum XPReason {
+  LESSON_COMPLETED
+  QUIZ_COMPLETED
+  DAILY_CHALLENGE_COMPLETED
+  DAILY_GOAL_REACHED
+  STREAK_BONUS
+  ACHIEVEMENT_UNLOCKED
+  ADMIN_ADJUSTMENT
+}
+
+enum BillingPeriod {
+  MONTHLY
+  YEARLY
+}
+
+enum BillingProvider {
+  GOOGLE_PLAY
+  MOCK
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  GRACE_PERIOD
+  PAUSED
+  ON_HOLD
+  CANCELED
+  EXPIRED
+  REFUNDED
+  REVOKED
+}
+
+enum EntitlementSource {
+  SUBSCRIPTION
+  MANUAL
+  PROMO
+}
+
+enum SessionRevocationReason {
+  LOGOUT
+  ROTATED
+  REUSE_DETECTED
+  PASSWORD_CHANGED
+  ACCOUNT_DELETED
+  ADMIN_REVOKED
+}
+
+enum PurchaseStatus {
+  PENDING
+  VERIFIED
+  FAILED
+  REFUNDED
+}
+
+enum BillingEventType {
+  PURCHASE
+  RENEWAL
+  CANCEL
+  REFUND
+  EXPIRY
+  REVOKE
+  GRACE_PERIOD
+  TEST
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  CONTENT_EDITOR
+  ANALYST
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO
+  DOCUMENT
+}
+
+enum DevicePlatform {
+  ANDROID
+  WEB
+}
+
+/// Reminder families delivered by the notification scheduler.
+enum NotificationType {
+  DAILY_REMINDER
+  STREAK_REMINDER
+  INCOMPLETE_LESSON
+  NEW_LESSON_ANNOUNCEMENT
+}
+
+enum DeletionRequestStatus {
+  PENDING
+  COMPLETED
+  CANCELED
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  emailVerifiedAt       DateTime?
+  passwordHash          String? // null for Google-only accounts
+  name                  String?
+  avatarUrl             String?
+  status                UserStatus @default(ACTIVE)
+  timeZone              String     @default("Asia/Kolkata")
+  locale                String     @default("en-IN")
+  onboardingCompletedAt DateTime?
+  termsAcceptedAt       DateTime?
+  privacyAcceptedAt     DateTime?
+  termsVersion          String?
+  passwordChangedAt     DateTime?
+  lastActiveAt          DateTime?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  deletedAt             DateTime?
+
+  profile                UserProfile?
+  preferences            UserPreference?
+  identities             UserIdentity[]
+  sessions               Session[]
+  notificationPreference NotificationPreference?
+  deviceTokens           DeviceToken[]
+  stats                  UserStats?
+
+  lessonProgress            LessonProgress[]
+  quizAttempts              QuizAttempt[]
+  dailyActivity             DailyActivity[]
+  xpTransactions            XPTransaction[]
+  achievements              UserAchievement[]
+  achievementProgress       UserAchievementProgress[]
+  dailyChallengeCompletions DailyChallengeCompletion[]
+
+  subscriptions    Subscription[]
+  purchases        Purchase[]
+  entitlement      Entitlement?
+  deletionRequests AccountDeletionRequest[]
+
+  analyticsEvents AnalyticsEvent[]
+  notificationDeliveries NotificationDelivery[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model UserProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  headline    String?
+  occupation  String?
+  city        String?
+  bio         String?
+  dateOfBirth DateTime? @db.Date
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserPreference {
+  id                  String            @id @default(cuid())
+  userId              String            @unique
+  learningGoal        LearningGoal?
+  proficiency         ProficiencyLevel?
+  explanationLanguage ContentLanguage   @default(HINGLISH)
+  dailyGoalMinutes    Int               @default(10)
+  interests           String[]          @default([])
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+/// Supports both email/password and linked Google identities. A user may link
+/// more than one provider; provider identities are unique per provider.
+model UserIdentity {
+  id             String       @id @default(cuid())
+  userId         String
+  provider       AuthProvider
+  providerUserId String
+  providerEmail  String?
+  createdAt      DateTime     @default(now())
+  lastUsedAt     DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
+  @@index([userId])
+  @@map("user_identities")
+}
+
+/// Refresh-token session. Only a hash of the refresh token is stored.
+/// Rotating a refresh token marks the old row revoked and links the replacement.
+model Session {
+  id                  String                   @id @default(cuid())
+  userId              String
+  refreshTokenHash    String                   @unique
+  familyId            String
+  userAgent           String?
+  ipAddress           String?
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  revokedReason       SessionRevocationReason?
+  replacedBySessionId String?
+  lastUsedAt          DateTime                 @default(now())
+  createdAt           DateTime                 @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@index([familyId])
+  @@map("sessions")
+}
+
+/// Denormalized counters for fast dashboard rendering. The XP ledger remains
+/// the source of truth; these values are maintained transactionally.
+model UserStats {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  totalXp          Int       @default(0)
+  currentLevel     Int       @default(1)
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastLearningDate DateTime? @db.Date
+  lessonsCompleted Int       @default(0)
+  quizzesCompleted Int       @default(0)
+  minutesLearned   Int       @default(0)
+  updatedAt        DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+// ---------------------------------------------------------------------------
+// Learning content
+// ---------------------------------------------------------------------------
+
+model LearningPath {
+  id                 String            @id @default(cuid())
+  slug               String            @unique
+  title              String
+  description        String
+  coverImageUrl      String?
+  iconUrl            String?
+  order              Int               @default(0)
+  status             PublicationStatus @default(DRAFT)
+  availableLanguages ContentLanguage[] @default([ENGLISH])
+  publishedAt        DateTime?
+  archivedAt         DateTime?
+  createdById        String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  courses   Course[]
+  createdBy AdminUser? @relation("LearningPathCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([status, order])
+  @@map("learning_paths")
+}
+
+model Course {
+  id                 String            @id @default(cuid())
+  learningPathId     String
+  slug               String
+  title              String
+  shortDescription   String
+  description        String?
+  coverImageUrl      String?
+  objectives         String[]          @default([])
+  difficulty         ProficiencyLevel  @default(BEGINNER)
+  estimatedMinutes   Int               @default(30)
+  accessTier         AccessTier        @default(FREE)
+  status             PublicationStatus @default(DRAFT)
+  order              Int               @default(0)
+  availableLanguages ContentLanguage[] @default([ENGLISH])
+  publishedAt        DateTime?
+  archivedAt         DateTime?
+  createdById        String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  learningPath  LearningPath         @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  modules       CourseModule[]
+  prerequisites CoursePrerequisite[] @relation("CoursePrerequisites")
+  requiredFor   CoursePrerequisite[] @relation("CourseRequiredFor")
+  createdBy     AdminUser?           @relation("CourseCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([learningPathId, slug])
+  @@index([status, order])
+  @@map("courses")
+}
+
+model CoursePrerequisite {
+  courseId             String
+  prerequisiteCourseId String
+
+  course       Course @relation("CoursePrerequisites", fields: [courseId], references: [id], onDelete: Cascade)
+  prerequisite Course @relation("CourseRequiredFor", fields: [prerequisiteCourseId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, prerequisiteCourseId])
+  @@map("course_prerequisites")
+}
+
+model CourseModule {
+  id               String   @id @default(cuid())
+  courseId         String
+  slug             String
+  title            String
+  description      String?
+  order            Int      @default(0)
+  estimatedMinutes Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@unique([courseId, slug])
+  @@index([courseId, order])
+  @@map("course_modules")
+}
+
+model Lesson {
+  id                 String            @id @default(cuid())
+  moduleId           String
+  slug               String
+  title              String
+  summary            String
+  objective          String
+  difficulty         ProficiencyLevel  @default(BEGINNER)
+  estimatedMinutes   Int               @default(5)
+  accessTier         AccessTier        @default(FREE)
+  status             PublicationStatus @default(DRAFT)
+  order              Int               @default(0)
+  version            Int               @default(1)
+  primaryLanguage    ContentLanguage   @default(ENGLISH)
+  requiresQuiz       Boolean           @default(false)
+  /// Optional JSON describing completion rules; null means "read to the end".
+  completionCriteria Json?
+  publishedAt        DateTime?
+  archivedAt         DateTime?
+  createdById        String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  module          CourseModule         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  blocks          LessonContentBlock[]
+  translations    LessonTranslation[]
+  quizzes         Quiz[]
+  progress        LessonProgress[]
+  dailyChallenges DailyChallenge[]
+  createdBy       AdminUser?           @relation("LessonCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([moduleId, slug])
+  @@index([status, order])
+  @@map("lessons")
+}
+
+/// Ordered content block. `payload` is a per-type JSON contract documented in
+/// docs/CONTENT-MODEL.md (text, items, url, speaker lines, etc.).
+model LessonContentBlock {
+  id           String           @id @default(cuid())
+  lessonId     String
+  type         ContentBlockType
+  order        Int              @default(0)
+  payload      Json
+  mediaAssetId String?
+  caption      String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  lesson     Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  mediaAsset MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+
+  @@index([lessonId, order])
+  @@index([mediaAssetId])
+  @@map("lesson_content_blocks")
+}
+
+model LessonTranslation {
+  id        String          @id @default(cuid())
+  lessonId  String
+  language  ContentLanguage
+  title     String
+  summary   String
+  objective String
+  /// Optional translated block payloads; null falls back to the primary lesson.
+  content   Json?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, language])
+  @@map("lesson_translations")
+}
+
+model Quiz {
+  id               String            @id @default(cuid())
+  slug             String            @unique
+  kind             QuizKind          @default(LESSON)
+  lessonId         String?
+  /// A lesson may have several draft/archived quiz versions, but only one may
+  /// be published at a time. Attempts stay attached to the version they used.
+  version          Int               @default(1)
+  title            String
+  description      String?
+  passingScore     Int               @default(60)
+  xpReward         Int               @default(5)
+  status           PublicationStatus @default(DRAFT)
+  timeLimitSeconds Int?
+  publishedAt      DateTime?
+  archivedAt       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  lesson          Lesson?          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions       Question[]
+  attempts        QuizAttempt[]
+  dailyChallenges DailyChallenge[]
+
+  @@unique([lessonId, version])
+  @@index([lessonId, status])
+  @@index([status])
+  @@map("quizzes")
+}
+
+model Question {
+  id          String       @id @default(cuid())
+  quizId      String
+  type        QuestionType
+  prompt      String
+  scenario    String?
+  explanation String
+  order       Int          @default(0)
+  points      Int          @default(1)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  quiz    Quiz             @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options QuestionOption[]
+  answers QuizAnswer[]
+
+  @@unique([quizId, order])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  text       String
+  feedback   String?
+  isCorrect  Boolean  @default(false)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  question Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  QuizAnswer[]
+
+  @@unique([questionId, order])
+  @@map("question_options")
+}
+
+// ---------------------------------------------------------------------------
+// Learning activity
+// ---------------------------------------------------------------------------
+
+model LessonProgress {
+  id               String               @id @default(cuid())
+  userId           String
+  lessonId         String
+  status           LessonProgressStatus @default(IN_PROGRESS)
+  progressPercent  Int                  @default(0)
+  lastBlockOrder   Int?
+  startedAt        DateTime             @default(now())
+  lastAccessedAt   DateTime             @default(now())
+  completedAt      DateTime?
+  timeSpentSeconds Int                  @default(0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Content with learning history must be archived, never hard-deleted.
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, lessonId])
+  @@index([userId, status])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+model QuizAttempt {
+  id             String            @id @default(cuid())
+  userId         String
+  quizId         String
+  attemptNumber  Int
+  status         QuizAttemptStatus @default(IN_PROGRESS)
+  score          Int?
+  correctCount   Int               @default(0)
+  totalQuestions Int               @default(0)
+  xpAwarded      Int               @default(0)
+  /// Set once on submission; makes retried submissions idempotent.
+  submissionKey  String?           @unique
+  startedAt      DateTime          @default(now())
+  submittedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Quizzes with attempts must be archived, never hard-deleted.
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Restrict)
+  answers QuizAnswer[]
+
+  @@unique([userId, quizId, attemptNumber])
+  @@index([userId, createdAt])
+  @@index([quizId])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id               String   @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String?
+  isCorrect        Boolean  @default(false)
+  answeredAt       DateTime @default(now())
+
+  attempt        QuizAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  /// Questions with answer history must be versioned, never hard-deleted.
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+  @@map("quiz_answers")
+}
+
+/// One row per learner per local day. `activityDate` is a date-only column
+/// computed using the user's time zone; opening the app alone does not count.
+model DailyActivity {
+  id               String   @id @default(cuid())
+  userId           String
+  activityDate     DateTime @db.Date
+  lessonsCompleted Int      @default(0)
+  quizzesCompleted Int      @default(0)
+  minutesLearned   Int      @default(0)
+  xpEarned         Int      @default(0)
+  dailyGoalMinutes Int      @default(10)
+  goalMet          Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, activityDate])
+  @@index([activityDate])
+  @@map("daily_activity")
+}
+
+/// Append-only XP ledger. Corrections are new adjustment rows, never edits.
+/// `idempotencyKey` prevents duplicate awards (for example repeated completion).
+model XPTransaction {
+  id             String   @id @default(cuid())
+  userId         String
+  amount         Int
+  reason         XPReason
+  sourceType     String
+  sourceId       String?
+  idempotencyKey String   @unique
+  description    String?
+  balanceAfter   Int?
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([reason])
+  @@map("xp_transactions")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  title       String
+  description String
+  iconUrl     String?
+  xpReward    Int      @default(0)
+  /// Rule definition, e.g. { "type": "LESSONS_COMPLETED", "target": 10 }
+  criteria    Json
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userAchievements UserAchievement[]
+  progress         UserAchievementProgress[]
+
+  @@index([isActive, order])
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId, earnedAt])
+  @@map("user_achievements")
+}
+
+model UserAchievementProgress {
+  id            String    @id @default(cuid())
+  userId        String
+  achievementId String
+  currentValue  Int       @default(0)
+  targetValue   Int
+  completedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievement_progress")
+}
+
+model DailyChallenge {
+  id            String   @id @default(cuid())
+  challengeDate DateTime @unique @db.Date
+  title         String
+  description   String?
+  lessonId      String?
+  quizId        String?
+  xpReward      Int      @default(10)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lesson      Lesson?                    @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  quiz        Quiz?                      @relation(fields: [quizId], references: [id], onDelete: SetNull)
+  completions DailyChallengeCompletion[]
+
+  @@index([challengeDate, isActive])
+  @@map("daily_challenges")
+}
+
+model DailyChallengeCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  challengeId String
+  completedAt DateTime @default(now())
+  xpAwarded   Int      @default(0)
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([userId, completedAt])
+  @@map("daily_challenge_completions")
+}
+
+// ---------------------------------------------------------------------------
+// Monetization
+// ---------------------------------------------------------------------------
+
+model SubscriptionPlan {
+  id                  String        @id @default(cuid())
+  code                String        @unique
+  name                String
+  billingPeriod       BillingPeriod
+  priceInPaise        Int
+  currency            String        @default("INR")
+  googlePlayProductId String?       @unique
+  benefits            String[]      @default([])
+  isActive            Boolean       @default(true)
+  order               Int           @default(0)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([isActive, order])
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  userId                 String
+  planId                 String
+  provider               BillingProvider    @default(GOOGLE_PLAY)
+  status                 SubscriptionStatus @default(PENDING)
+  providerSubscriptionId String?
+  /// SHA-256 hash of the Google Play purchase token, used for lookup/dedupe.
+  purchaseTokenHash      String?            @unique
+  /// AES-GCM ciphertext of the purchase token; the raw token is never stored.
+  purchaseTokenEncrypted String?
+  autoRenewing           Boolean            @default(true)
+  startedAt              DateTime?
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
+  canceledAt             DateTime?
+  endedAt                DateTime?
+  lastVerifiedAt         DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  entitlement   Entitlement?
+  purchases     Purchase[]
+  billingEvents BillingEvent[]
+
+  @@index([userId, status])
+  @@index([status, currentPeriodEnd])
+  @@map("subscriptions")
+}
+
+/// Server-authoritative access state. Premium access requires
+/// isActive = true, tier = PREMIUM, and validUntil in the future (when set).
+model Entitlement {
+  id             String             @id @default(cuid())
+  userId         String             @unique
+  tier           AccessTier         @default(FREE)
+  isActive       Boolean            @default(false)
+  source         EntitlementSource?
+  validUntil     DateTime?
+  subscriptionId String?            @unique
+  updatedAt      DateTime           @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([tier, isActive, validUntil])
+  @@map("entitlements")
+}
+
+model Purchase {
+  id                String          @id @default(cuid())
+  userId            String
+  subscriptionId    String?
+  provider          BillingProvider
+  productId         String
+  orderId           String?         @unique
+  /// SHA-256 hash of the purchase token; raw tokens are never stored.
+  purchaseTokenHash String?
+  purchaseTime      DateTime
+  priceInPaise      Int?
+  currency          String          @default("INR")
+  status            PurchaseStatus  @default(PENDING)
+  rawPayload        Json?
+  verifiedAt        DateTime?
+  createdAt         DateTime        @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([purchaseTokenHash])
+  @@map("purchases")
+}
+
+/// Idempotent billing webhook / RTDN record. `(provider, eventId)` is unique so
+/// repeated deliveries are processed at most once.
+model BillingEvent {
+  id                String           @id @default(cuid())
+  provider          BillingProvider
+  eventId           String
+  /// Raw provider notification type, kept for debugging and schema drift.
+  providerEventType String?
+  type              BillingEventType
+  subscriptionId    String?
+  purchaseTokenHash String?
+  payload           Json
+  attempts          Int              @default(0)
+  nextRetryAt       DateTime?
+  processedAt       DateTime?
+  processingError   String?
+  createdAt         DateTime         @default(now())
+
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, eventId])
+  @@index([provider, createdAt])
+  @@index([processedAt])
+  @@index([nextRetryAt])
+  @@map("billing_events")
+}
+
+// ---------------------------------------------------------------------------
+// Administration
+// ---------------------------------------------------------------------------
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(CONTENT_EDITOR)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  sessions      AdminSession[]
+  auditLogs     AuditLog[]
+  mediaAssets   MediaAsset[]
+  learningPaths LearningPath[] @relation("LearningPathCreatedBy")
+  courses       Course[]       @relation("CourseCreatedBy")
+  lessons       Lesson[]       @relation("LessonCreatedBy")
+
+  @@index([isActive, role])
+  @@map("admin_users")
+}
+
+/// Admin sessions are a separate identity realm from learner sessions.
+model AdminSession {
+  id                  String                   @id @default(cuid())
+  adminUserId         String
+  refreshTokenHash    String                   @unique
+  familyId            String?
+  userAgent           String?
+  ipAddress           String?
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  revokedReason       SessionRevocationReason?
+  replacedBySessionId String?
+  lastUsedAt          DateTime                 @default(now())
+  createdAt           DateTime                 @default(now())
+
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, revokedAt])
+  @@index([expiresAt])
+  @@index([familyId])
+  @@map("admin_sessions")
+}
+
+model MediaAsset {
+  id              String    @id @default(cuid())
+  key             String    @unique
+  url             String
+  type            MediaType
+  mimeType        String
+  sizeBytes       Int
+  width           Int?
+  height          Int?
+  durationSeconds Int?
+  altText         String?
+  checksum        String?
+  uploadedById    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  uploadedBy AdminUser?           @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  blocks     LessonContentBlock[]
+
+  @@index([type])
+  @@map("media_assets")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  before      Json?
+  after       Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([adminUserId])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications, analytics, account lifecycle
+// ---------------------------------------------------------------------------
+
+model NotificationPreference {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  dailyReminder            Boolean  @default(true)
+  incompleteLessonReminder Boolean  @default(true)
+  streakReminder           Boolean  @default(true)
+  newLessonAnnouncements   Boolean  @default(true)
+  reminderTimeLocal        String   @default("19:00")
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model DeviceToken {
+  id         String         @id @default(cuid())
+  userId     String
+  token      String         @unique
+  platform   DevicePlatform @default(ANDROID)
+  isActive   Boolean        @default(true)
+  lastSeenAt DateTime       @default(now())
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+  @@map("device_tokens")
+}
+
+model AnalyticsEvent {
+  id         String          @id @default(cuid())
+  userId     String?
+  name       String
+  properties Json?
+  platform   DevicePlatform?
+  appVersion String?
+  sessionId  String?
+  createdAt  DateTime        @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([name, createdAt])
+  @@index([userId, createdAt])
+  @@map("analytics_events")
+}
+
+/// Ledger of reminders that were actually delivered. The unique key makes
+/// scheduled dispatch idempotent across overlapping ticks and restarts.
+model NotificationDelivery {
+  id          String           @id @default(cuid())
+  userId      String
+  type        NotificationType
+  dedupeKey   String
+  /// User-local calendar date (`YYYY-MM-DD`) used for frequency caps.
+  localDate   String
+  title       String
+  body        String
+  deviceCount Int              @default(0)
+  sentAt      DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, dedupeKey])
+  @@index([userId, localDate])
+  @@map("notification_deliveries")
+}
+
+model AccountDeletionRequest {
+  id           String                @id @default(cuid())
+  userId       String
+  status       DeletionRequestStatus @default(PENDING)
+  reason       String?
+  requestedAt  DateTime              @default(now())
+  scheduledFor DateTime
+  completedAt  DateTime?
+  canceledAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@index([userId])
+  @@map("account_deletion_requests")
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Compose owns every pixel; the platform theme only supplies the window
+        background so the first frame does not flash. The layer-list shows the
+        brand mark while the process starts on Android 11 and below.
+    -->
+    <style name="Theme.SmartMe" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

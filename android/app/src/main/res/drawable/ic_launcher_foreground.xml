@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive-icon foreground: the logo mark without its tile, scaled into the
+  66 dp safe zone of the 108 dp canvas. The launcher supplies a white background.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:scaleX="0.78"
+        android:scaleY="0.78"
+        android:translateX="16.56"
+        android:translateY="16.56">
+
+        <!-- Amber sparks -->
+        <path
+            android:pathData="M31,18 L38,28"
+            android:strokeColor="#FFB800"
+            android:strokeWidth="7.5"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M48,13 L48,26"
+            android:strokeColor="#FFB800"
+            android:strokeWidth="7.5"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M65,18 L58,28"
+            android:strokeColor="#FFB800"
+            android:strokeWidth="7.5"
+            android:strokeLineCap="round" />
+
+        <!-- Book shadow -->
+        <path
+            android:fillColor="#0047B3"
+            android:pathData="M18,66 C25,75 36,81 48,83.5 C60,81 71,75 78,66 C77,78 65,87 48,87 C31,87 19,78 18,66 Z" />
+
+        <!-- Book cover -->
+        <path
+            android:fillColor="#1668FF"
+            android:pathData="M14,49.5 C14,46 17,43.6 20.5,44.2 L44.5,50 C46.8,50.6 48,52.4 48,54.7 L48,82 C42.5,82 36.5,80.8 31,78 C25.5,75.2 20,70.8 16.8,66.2 C15,63 14.2,56 14,49.5 Z" />
+        <path
+            android:fillColor="#1668FF"
+            android:pathData="M82,49.5 C82,46 79,43.6 75.5,44.2 L51.5,50 C49.2,50.6 48,52.4 48,54.7 L48,82 C53.5,82 59.5,80.8 65,78 C70.5,75.2 76,70.8 79.2,66.2 C81,63 81.8,56 82,49.5 Z" />
+
+        <!-- Pages -->
+        <path
+            android:fillColor="#4C9BF5"
+            android:pathData="M21,47.2 C28,44.3 37,44.5 45,48.7 C46.6,49.6 47.6,51.2 47.6,53 L47.6,77 C40,76.4 31,78 24,82 C21.4,71 20.8,58.2 21,47.2 Z" />
+        <path
+            android:fillColor="#4C9BF5"
+            android:pathData="M75,47.2 C68,44.3 59,44.5 51,48.7 C49.4,49.6 48.4,51.2 48.4,53 L48.4,77 C56,76.4 65,78 72,82 C74.6,71 75.2,58.2 75,47.2 Z" />
+
+        <!-- Page highlights -->
+        <path
+            android:fillColor="#A9D2FF"
+            android:pathData="M25,49 C31,46.6 38,47 44,50.8 C45.2,51.6 46,52.7 46,54 L46,68.3 C39,68 32.5,69.6 27.5,72.8 C25.8,64.8 25.2,56.2 25,49 Z" />
+        <path
+            android:fillColor="#A9D2FF"
+            android:pathData="M71,49 C65,46.6 58,47 52,50.8 C50.8,51.6 50,52.7 50,54 L50,68.3 C57,68 63.5,69.6 68.5,72.8 C70.2,64.8 70.8,56.2 71,49 Z" />
+    </group>
+</vector>

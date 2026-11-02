@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Generated Prisma Client (recreated by `prisma generate`)
+backend/src/generated/
+
+# Environment
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Android (scaffolded in Task 12)
+android/.gradle/
+android/**/build/
+android/local.properties
+android/.cxx/
+*.apk
+*.aab
+*.keystore
+!android/debug.keystore
+captures/
+
+# Testing / tooling
+playwright-report/
+test-results/
+tmp/

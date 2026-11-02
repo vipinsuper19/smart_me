@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Compose owns every pixel; the platform theme only supplies the launch
+        window. The system splash icon is intentionally transparent: the
+        branded splash draws the mark itself, and two copies at different sizes
+        would visibly cross-fade on cold start.
+    -->
+    <style name="Theme.SmartMe" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowSplashScreenBackground">@color/window_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_transparent</item>
+    </style>
+</resources>

@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: smartme-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: smartme
+      POSTGRES_PASSWORD: smartme
+      POSTGRES_DB: smartme
+    ports:
+      # Host port 5433 by default so SmartMe can coexist with other local Postgres instances.
+      - '${POSTGRES_PORT:-5433}:5432'
+    volumes:
+      - smartme-pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U smartme -d smartme']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  smartme-pgdata:
