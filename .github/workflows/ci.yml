@@ -32,6 +32,10 @@ jobs:
     env:
       DATABASE_URL: postgresql://smartme:smartme@localhost:5432/smartme?schema=public
       APP_TIME_ZONE: Asia/Kolkata
+      # Integration suites boot AppModule, so the config contract must be
+      # satisfied in CI too. These are throwaway CI-only values (>= 32 chars).
+      JWT_ACCESS_SECRET: ci-only-access-secret-0000000000000000
+      JWT_REFRESH_SECRET: ci-only-refresh-secret-00000000000000
 
     steps:
       - name: Checkout
@@ -72,7 +76,8 @@ jobs:
 
   android:
     name: Android build and unit tests
-    runs-on: ubuntu-latest
+    # Pinned while the Android SDK setup tooling catches up with Ubuntu 26.04.
+    runs-on: ubuntu-24.04
 
     defaults:
       run:
@@ -83,13 +88,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4

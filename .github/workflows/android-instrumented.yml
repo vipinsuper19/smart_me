@@ -19,7 +19,10 @@ concurrency:
 jobs:
   instrumented:
     name: Instrumented UI tests (API 36 emulator)
-    runs-on: ubuntu-latest
+    # Ubuntu 24.04 is pinned: the emulator tooling is validated there while the
+    # ubuntu-latest label migrates to Ubuntu 26.04. The image already ships the
+    # Android SDK, so android-actions/setup-android is no longer needed.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
 
     steps:
@@ -27,16 +30,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify Android SDK
+        run: |
+          test -n "$ANDROID_SDK_ROOT" || test -n "$ANDROID_HOME"
+          sdkmanager --version
 
       - name: Make wrapper executable
         run: chmod +x android/gradlew
