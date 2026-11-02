@@ -135,6 +135,19 @@ describeIfDatabase('Notifications integration', () => {
       },
     });
     incompleteLessonId = incomplete.id;
+
+    // This suite pins `NOW`, but seed/demo lessons are published with the real
+    // seed timestamp. If the database is seeded close to the test run, those
+    // lessons land inside the announcement window (including the next day) and
+    // produce extra, unrelated announcements. Age any lesson this suite did not
+    // create so only the fixtures above are ever considered new.
+    await prisma.lesson.updateMany({
+      where: {
+        id: { notIn: [published.id, incomplete.id] },
+        publishedAt: { gte: new Date(NOW.getTime() - 24 * 60 * 60 * 1000) },
+      },
+      data: { publishedAt: new Date(NOW.getTime() - 30 * 24 * 60 * 60 * 1000) },
+    });
   });
 
   afterEach(async () => {
