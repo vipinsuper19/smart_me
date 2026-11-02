@@ -77,6 +77,32 @@ fun CreateAccountScreen(
         )
     }
 
+    CreateAccountContent(
+        state = state,
+        onBack = onBack,
+        onContinueWithEmail = onContinueWithEmail,
+        onSignIn = onSignIn,
+        onGoogleClick = { activity?.let(viewModel::signUpWithGoogle) },
+        googleEnabled = activity != null,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Stateless body of the provider chooser. Kept separate from the Hilt-backed
+ * entry point so previews (and future screenshot tests) can render every state
+ * without constructing a ViewModel.
+ */
+@Composable
+internal fun CreateAccountContent(
+    state: CreateAccountUiState,
+    onBack: () -> Unit,
+    onContinueWithEmail: () -> Unit,
+    onSignIn: () -> Unit,
+    onGoogleClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    googleEnabled: Boolean = true,
+) {
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -140,9 +166,9 @@ fun CreateAccountScreen(
             if (state.googleAvailable) {
                 ProviderButton(
                     text = stringResource(R.string.auth_continue_google),
-                    onClick = { activity?.let(viewModel::signUpWithGoogle) },
+                    onClick = onGoogleClick,
                     loading = state.googleLoading,
-                    enabled = activity != null,
+                    enabled = googleEnabled,
                     icon = {
                         Image(
                             painter = painterResource(R.drawable.ic_google),

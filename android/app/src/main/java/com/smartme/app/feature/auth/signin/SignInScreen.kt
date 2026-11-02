@@ -55,7 +55,6 @@ fun SignInScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
-    val focusManager = LocalFocusManager.current
 
     if (state.consentRequired) {
         GoogleConsentDialog(
@@ -63,6 +62,38 @@ fun SignInScreen(
             onDismiss = viewModel::dismissGoogleConsent,
         )
     }
+
+    SignInContent(
+        state = state,
+        onBack = onBack,
+        onCreateAccount = onCreateAccount,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
+        onSubmit = viewModel::submit,
+        onGoogleSignIn = { activity?.let(viewModel::signInWithGoogle) },
+        googleEnabled = activity != null,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Stateless body of the sign-in form, shared by the screen and its previews.
+ */
+@Composable
+internal fun SignInContent(
+    state: SignInUiState,
+    onBack: () -> Unit,
+    onCreateAccount: () -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onSubmit: () -> Unit,
+    onGoogleSignIn: () -> Unit,
+    modifier: Modifier = Modifier,
+    googleEnabled: Boolean = true,
+) {
+    val focusManager = LocalFocusManager.current
 
     Scaffold(modifier = modifier) { innerPadding ->
         Column(
@@ -85,7 +116,7 @@ fun SignInScreen(
 
             AuthTextField(
                 value = state.email,
-                onValueChange = viewModel::onEmailChange,
+                onValueChange = onEmailChange,
                 label = stringResource(R.string.auth_email_label),
                 errorRes = state.emailError,
                 enabled = !state.busy,
@@ -101,7 +132,7 @@ fun SignInScreen(
 
             AuthTextField(
                 value = state.password,
-                onValueChange = viewModel::onPasswordChange,
+                onValueChange = onPasswordChange,
                 label = stringResource(R.string.auth_password_label),
                 errorRes = state.passwordError,
                 enabled = !state.busy,
@@ -110,7 +141,7 @@ fun SignInScreen(
                 trailingIcon = {
                     PasswordVisibilityToggle(
                         visible = state.passwordVisible,
-                        onClick = viewModel::togglePasswordVisibility,
+                        onClick = onTogglePasswordVisibility,
                     )
                 },
                 keyboardOptions = KeyboardOptions(
@@ -120,7 +151,7 @@ fun SignInScreen(
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
-                        viewModel.submit()
+                        onSubmit()
                     },
                 ),
             )
@@ -129,7 +160,7 @@ fun SignInScreen(
                 text = stringResource(R.string.auth_sign_in_action),
                 onClick = {
                     focusManager.clearFocus()
-                    viewModel.submit()
+                    onSubmit()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.googleLoading,
@@ -140,9 +171,9 @@ fun SignInScreen(
                 AuthSeparator()
 
                 GoogleSignInButton(
-                    onClick = { activity?.let(viewModel::signInWithGoogle) },
+                    onClick = onGoogleSignIn,
                     loading = state.googleLoading,
-                    enabled = activity != null && !state.submitting,
+                    enabled = googleEnabled && !state.submitting,
                 )
             }
 

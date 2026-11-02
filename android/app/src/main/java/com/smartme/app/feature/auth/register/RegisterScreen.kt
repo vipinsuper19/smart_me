@@ -59,7 +59,6 @@ fun RegisterScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
-    val focusManager = LocalFocusManager.current
 
     if (state.consentRequired) {
         GoogleConsentDialog(
@@ -67,6 +66,46 @@ fun RegisterScreen(
             onDismiss = viewModel::dismissGoogleConsent,
         )
     }
+
+    RegisterContent(
+        state = state,
+        onBack = onBack,
+        onSignIn = onSignIn,
+        onNameChange = viewModel::onNameChange,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+        onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
+        onAcceptTermsChange = viewModel::onAcceptTermsChange,
+        onAcceptPrivacyChange = viewModel::onAcceptPrivacyChange,
+        onSubmit = viewModel::submit,
+        onGoogleSignUp = { activity?.let(viewModel::signUpWithGoogle) },
+        googleEnabled = activity != null,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Stateless body of the registration form, shared by the screen and its previews.
+ */
+@Composable
+internal fun RegisterContent(
+    state: RegisterUiState,
+    onBack: () -> Unit,
+    onSignIn: () -> Unit,
+    onNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onAcceptTermsChange: (Boolean) -> Unit,
+    onAcceptPrivacyChange: (Boolean) -> Unit,
+    onSubmit: () -> Unit,
+    onGoogleSignUp: () -> Unit,
+    modifier: Modifier = Modifier,
+    googleEnabled: Boolean = true,
+) {
+    val focusManager = LocalFocusManager.current
 
     Scaffold(modifier = modifier) { innerPadding ->
         Column(
@@ -89,7 +128,7 @@ fun RegisterScreen(
 
             AuthTextField(
                 value = state.name,
-                onValueChange = viewModel::onNameChange,
+                onValueChange = onNameChange,
                 label = stringResource(R.string.auth_name_label),
                 errorRes = state.nameError,
                 enabled = !state.busy,
@@ -105,7 +144,7 @@ fun RegisterScreen(
 
             AuthTextField(
                 value = state.email,
-                onValueChange = viewModel::onEmailChange,
+                onValueChange = onEmailChange,
                 label = stringResource(R.string.auth_email_label),
                 errorRes = state.emailError,
                 enabled = !state.busy,
@@ -121,7 +160,7 @@ fun RegisterScreen(
 
             AuthTextField(
                 value = state.password,
-                onValueChange = viewModel::onPasswordChange,
+                onValueChange = onPasswordChange,
                 label = stringResource(R.string.auth_password_label),
                 errorRes = state.passwordError,
                 helperRes = R.string.auth_password_helper,
@@ -131,7 +170,7 @@ fun RegisterScreen(
                 trailingIcon = {
                     PasswordVisibilityToggle(
                         visible = state.passwordVisible,
-                        onClick = viewModel::togglePasswordVisibility,
+                        onClick = onTogglePasswordVisibility,
                     )
                 },
                 keyboardOptions = KeyboardOptions(
@@ -145,7 +184,7 @@ fun RegisterScreen(
 
             AuthTextField(
                 value = state.confirmPassword,
-                onValueChange = viewModel::onConfirmPasswordChange,
+                onValueChange = onConfirmPasswordChange,
                 label = stringResource(R.string.auth_confirm_password_label),
                 errorRes = state.confirmPasswordError,
                 enabled = !state.busy,
@@ -158,20 +197,20 @@ fun RegisterScreen(
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
-                        viewModel.submit()
+                        onSubmit()
                     },
                 ),
             )
 
             ConsentCheckbox(
                 checked = state.acceptTerms,
-                onCheckedChange = viewModel::onAcceptTermsChange,
+                onCheckedChange = onAcceptTermsChange,
                 label = stringResource(R.string.auth_accept_terms),
                 enabled = !state.busy,
             )
             ConsentCheckbox(
                 checked = state.acceptPrivacy,
-                onCheckedChange = viewModel::onAcceptPrivacyChange,
+                onCheckedChange = onAcceptPrivacyChange,
                 label = stringResource(R.string.auth_accept_privacy),
                 enabled = !state.busy,
             )
@@ -188,7 +227,7 @@ fun RegisterScreen(
                 text = stringResource(R.string.auth_register_action),
                 onClick = {
                     focusManager.clearFocus()
-                    viewModel.submit()
+                    onSubmit()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.googleLoading,
@@ -199,9 +238,9 @@ fun RegisterScreen(
                 AuthSeparator()
 
                 GoogleSignInButton(
-                    onClick = { activity?.let(viewModel::signUpWithGoogle) },
+                    onClick = onGoogleSignUp,
                     loading = state.googleLoading,
-                    enabled = activity != null && !state.submitting,
+                    enabled = googleEnabled && !state.submitting,
                 )
             }
 

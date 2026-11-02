@@ -63,6 +63,25 @@ API 36 `google_apis` x86_64 emulator on GitHub-hosted Linux, using `/dev/kvm`
 for hardware acceleration, and uploads the HTML report and test results as an
 artifact. It also has a manual `workflow_dispatch` trigger.
 
+## Compose previews
+
+Every screen ships `@Preview` coverage so layout work does not need a device,
+emulator or backend.
+
+- `core/designsystem/preview/PreviewSupport.kt` defines `@ScreenPreviews`
+  (411 × 891 dp, light + dark) and `PreviewContainer` (the real `SmartMeTheme`
+  on an opaque app background). Apply `@ScreenPreviews` to every preview instead
+  of writing two `@Preview` annotations.
+- Previews live in `<Feature>Previews.kt` beside the screen. They render a
+  stateless body: `WelcomeScreen`, `HomeContent`, `SignInContent`,
+  `RegisterContent`, `CreateAccountContent`, `OnboardingContent`. Hilt-backed
+  screens expose an `internal` stateless composable for exactly this reason —
+  never build a ViewModel or hit the network inside a preview.
+- Cover meaningful states, not only the happy path: loading/empty/error, filled
+  and validation-error forms, every onboarding step, signed-in and signed-out.
+- Previews compile with the app (`main` source set), so `:app:compileDebugKotlin`
+  and CI catch breakage. They are also visible in Android Studio's split view.
+
 ## Backend endpoint
 
 `API_BASE_URL` is a `BuildConfig` field set per build type in `app/build.gradle.kts`:
@@ -97,6 +116,7 @@ app/src/main/java/com/smartme/app/
 ├─ MainActivity.kt, SmartMeApplication.kt, AppViewModel.kt
 ├─ core/
 │  ├─ designsystem/   theme (colour, type, shape, spacing) + shared components
+│  │                  + preview support (@ScreenPreviews, PreviewContainer)
 │  ├─ model/          UiState, UserSummary
 │  ├─ network/        Retrofit API, ApiExecutor, ApiErrorMapper, AuthInterceptor
 │  ├─ security/       TokenStore, Keystore cipher, DataStore persistence
@@ -260,4 +280,7 @@ because restored ciphertext cannot be decrypted by another device's key.
 - All user-visible text lives in `res/values/strings.xml`.
 - Screens render `UiState` through the shared state components instead of local
   booleans.
+- New or changed screens must add/update a `<Feature>Previews.kt` file using
+  `@ScreenPreviews` (light + dark) and cover their meaningful states. Keep the
+  screen's stateless body `internal` so previews do not need Hilt.
 - Do not commit `build/`, `.gradle/` or `local.properties`.

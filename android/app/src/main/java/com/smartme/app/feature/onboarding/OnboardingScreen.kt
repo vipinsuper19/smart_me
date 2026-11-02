@@ -90,6 +90,39 @@ fun OnboardingScreen(
         }
     }
 
+    OnboardingContent(
+        state = state,
+        mode = mode,
+        onBack = { if (state.canGoBack) viewModel.goBack() else onClose?.invoke() },
+        canClose = onClose != null,
+        onContinue = { if (state.isLastStep) finish() else viewModel.goNext() },
+        onGoal = viewModel::selectGoal,
+        onProficiency = viewModel::selectProficiency,
+        onLanguage = viewModel::selectLanguage,
+        onDailyGoal = viewModel::selectDailyGoal,
+        onInterest = viewModel::toggleInterest,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Stateless wizard body. Step content is derived entirely from [state], which
+ * lets previews render every question without a ViewModel or draft store.
+ */
+@Composable
+internal fun OnboardingContent(
+    state: OnboardingUiState,
+    mode: OnboardingMode,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+    onGoal: (String) -> Unit,
+    onProficiency: (String) -> Unit,
+    onLanguage: (String) -> Unit,
+    onDailyGoal: (Int) -> Unit,
+    onInterest: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    canClose: Boolean = false,
+) {
     Scaffold(modifier = modifier) { innerPadding ->
         Column(
             modifier = Modifier
@@ -102,10 +135,8 @@ fun OnboardingScreen(
                 stepIndex = state.stepIndex,
                 totalSteps = OnboardingStep.entries.size,
                 progress = state.progress,
-                showBack = state.canGoBack || onClose != null,
-                onBack = {
-                    if (state.canGoBack) viewModel.goBack() else onClose?.invoke()
-                },
+                showBack = state.canGoBack || canClose,
+                onBack = onBack,
             )
 
             Column(
@@ -129,11 +160,11 @@ fun OnboardingScreen(
                 StepOptions(
                     step = state.step,
                     draft = state.draft,
-                    onGoal = viewModel::selectGoal,
-                    onProficiency = viewModel::selectProficiency,
-                    onLanguage = viewModel::selectLanguage,
-                    onDailyGoal = viewModel::selectDailyGoal,
-                    onInterest = viewModel::toggleInterest,
+                    onGoal = onGoal,
+                    onProficiency = onProficiency,
+                    onLanguage = onLanguage,
+                    onDailyGoal = onDailyGoal,
+                    onInterest = onInterest,
                 )
             }
 
@@ -153,9 +184,7 @@ fun OnboardingScreen(
                         else -> R.string.onboarding_finish
                     },
                 ),
-                onClick = {
-                    if (state.isLastStep) finish() else viewModel.goNext()
-                },
+                onClick = onContinue,
                 modifier = Modifier.fillMaxWidth(),
                 loading = state.submitting,
             )
