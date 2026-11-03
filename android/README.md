@@ -124,7 +124,8 @@ app/src/main/java/com/smartme/app/
 ├─ data/
 │  ├─ auth/           AuthRepository, token/user mappers, SessionPreferences,
 │  │                  DefaultSessionRefresher
-│  └─ onboarding/     OnboardingRepository, in-memory draft store, option lists
+│  ├─ onboarding/     OnboardingRepository, in-memory draft store, option lists
+│  └─ learning/       LearningRepository (catalogue, progress, quiz, gamification)
 ├─ di/                Hilt modules (DataStore, security, network, auth, connectivity)
 ├─ navigation/        routes, auth graph, bottom bar, tab graph, app shell
 └─ feature/
@@ -134,7 +135,12 @@ app/src/main/java/com/smartme/app/
    │                  form components
    ├─ onboarding/     five-step wizard (pre-auth and post-auth)
    ├─ profile/        account summary + sign-out
-   └─ home, explore, practice, progress
+   ├─ learning/       shared badges, progress bar, premium dialog, error mapping
+   ├─ home/           goal/streak/XP dashboard, continue + recommendation cards
+   ├─ explore/        catalogue search, path detail, course detail
+   ├─ lesson/         block renderers (text/media/conversation), player, checkpoints
+   ├─ quiz/           resumable attempt, answer saving, results and review
+   └─ practice, progress
 ```
 
 Feature code depends on `core` and `data`; `core` never depends on `feature`. New
@@ -187,7 +193,42 @@ already converted to `ApiError` by `ApiExecutor`, so screens only render
   `DefaultSessionRefresher` (see below).
 - **Profile tab** with the signed-in name/email and a sign-out action.
 - Unit tests for auth validation, token/user mapping, interceptor refresh
-  behaviour and single-flight refresh (45 tests across 7 suites).
+  behaviour and single-flight refresh.
+
+## What Task 14 delivers
+
+- **Home dashboard** backed by `GET /gamification/summary`,
+  `GET /lessons/continue` and `GET /lessons/recommended`: greeting, daily-goal
+  bar, streak, level/XP, a resume card and a recommendation. The summary is
+  required; the two content cards disappear independently if their request
+  fails, so one missing recommendation never hides the streak. There is no daily
+  challenge card because the API does not expose one yet.
+- **Explore catalogue** over `GET /learning-paths` with local title/description
+  search, path detail (`GET /learning-paths/:id`), and course detail
+  (`GET /courses/:id`) with objectives, prerequisites and module/lesson rows.
+  Locked premium lessons open the shared upgrade dialog instead of a dead end.
+- **Lesson player** for every block type in `docs/CONTENT-MODEL.md`: headings,
+  paragraphs, bullet lists, callouts (including Hinglish highlighting),
+  example conversations, recaps, images (Coil 3), audio (framework
+  `MediaPlayer` with seek/transcript) and video (`VideoView`), plus a
+  knowledge-check preview and completion block. Unknown types are skipped.
+- **Resume and progress checkpointing**: the player restores the saved
+  `lastBlockOrder` (plus server progress), debounces scroll checkpoints for
+  1.2 s, and flushes the pending position when the screen pauses. Completion
+  uses `POST /lessons/:id/complete` and shows the awarded XP.
+- **Quiz flow** from `docs/API-QUIZ.md`: fetch the lesson quiz, create or resume
+  an attempt, save each answer immediately (with rollback and inline copy on
+  failure), submit for server scoring, then show score, pass/fail, XP and a
+  per-question review with explanations. A passing submission completes the
+  lesson automatically; retakes start a fresh attempt.
+- **Quiz gating**: a `requiresQuiz` lesson shows "Take quiz" instead of
+  "Complete lesson" until the quiz has been passed.
+- **Navigation**: typed routes for path/course/lesson/quiz; the bottom bar is
+  hidden above the tab graph, and finishing a lesson replaces it so the back
+  stack never accumulates a whole course. Home, Explore, path and course screens
+  refresh after returning from the player.
+- **Tests**: lesson time formatting, scroll-progress/resume mapping and quiz
+  saved-answer restoration, alongside the existing greeting/auth suites.
 
 ## Splash, welcome, onboarding and account-creation design pass
 
@@ -233,10 +274,11 @@ Material icons (`androidx.compose.material:material-icons-extended`) are used
 wherever a symbol reads faster than text: bottom navigation (filled for the
 selected tab, outlined otherwise), auth field leading icons (person, mail, lock),
 onboarding option icons (translate, work, trending, target, language, bolt,
-topics), Home status (`CloudDone`) and plan/rewards cards
-(`CalendarMonth`, `LocalFireDepartment`), Profile preferences (`Tune`) and the
-shared loading/empty/error views. AutoMirrored variants are used for directional
-icons so RTL layouts stay correct.
+topics), the Home dashboard (fire, star, play, arrow), catalogue rows (school,
+lock, schedule), lesson blocks (lightbulb, forum, checklist, image, audio,
+video, quiz) and Profile preferences (`Tune`), plus the shared loading/empty/error
+views. AutoMirrored variants are used for directional icons so RTL layouts stay
+correct.
 
 ## Session lifecycle
 
@@ -263,8 +305,10 @@ icons so RTL layouts stay correct.
 
 ## Deliberately not included yet
 
-- Learning, quiz and progress features (Tasks 14–15) — those tabs are placeholders.
-- Editable profile fields and learning-preference editing (Tasks 14–15).
+- Progress dashboard, practice tab, editable profile fields and learning
+  preference editing (Task 15).
+- Daily-challenge and practice quizzes; the backend only exposes lesson quizzes.
+- Time limits on quizzes (`timeLimitSeconds` is returned but not enforced).
 - Password reset and email verification screens.
 - Firebase / push notifications (Task 15).
 

@@ -124,7 +124,7 @@ above handle both explicitly.
 - [x] **Task 11 — Notifications & analytics:** reminder preferences, FCM device registration with masked tokens and a 10-device cap, interval scheduler gated by `NOTIFICATIONS_ENABLED`/`NOTIFICATIONS_SCHEDULER_ENABLED`, daily/streak/incomplete/new-lesson reminders with a per-learner daily cap, idempotent delivery ledger with invalid-token deactivation, JWT-scoped batched product-event ingestion with PII stripping and a 4 KB budget, and product-event totals in the admin analytics overview, [API contract](docs/API-NOTIFICATIONS.md)
 - [x] Task 12 — Android foundation: Compose design system, five-tab navigation shell, OkHttp/Retrofit + kotlinx.serialization network layer with typed error mapping, Keystore-encrypted token storage, connectivity banner, shared loading/empty/error states, [app guide](android/README.md)
 - [x] Task 13 - Android auth + onboarding: session gate, welcome/sign-in/register screens, Google Sign-In via Credential Manager with consent retry, five-step pre- and post-auth onboarding wizard, single-flight refresh rotation with proactive and 401-token recovery, sign-out, [app guide](android/README.md#what-task-13-delivers)
-- [ ] Task 14 — Android core learning
+- [x] Task 14 — Android core learning: Home dashboard (goal, streak, XP, continue, recommendation), Explore catalogue with local search, path/course detail, structured lesson player with block/media renderers, resumable scroll progress, quiz attempts with server scoring and review, quiz-gated auto-completion, [app guide](android/README.md#what-task-14-delivers)
 - [ ] Task 15 — Android progress, profile & monetization
 - [ ] Task 16 — QA, content & release
 

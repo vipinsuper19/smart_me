@@ -33,3 +33,17 @@ data object ProgressRoute
 
 @Serializable
 data object ProfileRoute
+
+// Catalogue and player destinations. These sit above the tab graph, so the
+// bottom bar is hidden while they are on top of the back stack.
+@Serializable
+data class PathDetailRoute(val pathId: String)
+
+@Serializable
+data class CourseDetailRoute(val courseId: String)
+
+@Serializable
+data class LessonRoute(val lessonId: String)
+
+@Serializable
+data class QuizRoute(val lessonId: String)

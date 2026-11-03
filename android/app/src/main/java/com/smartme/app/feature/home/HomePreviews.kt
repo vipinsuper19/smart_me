@@ -4,16 +4,46 @@ import androidx.compose.runtime.Composable
 import com.smartme.app.core.designsystem.preview.PreviewContainer
 import com.smartme.app.core.designsystem.preview.ScreenPreviews
 import com.smartme.app.core.model.UiState
+import com.smartme.app.feature.learning.LearningSamples
 
 @ScreenPreviews
 @Composable
-private fun HomeConnectedPreview() {
+private fun HomeDashboardPreview() {
     PreviewContainer {
         HomeContent(
             state = UiState.Content(
-                BackendStatus(service = "SmartMe API", version = "0.1.0"),
+                HomeData(
+                    summary = LearningSamples.summary,
+                    continueLearning = LearningSamples.continueItem,
+                    recommended = LearningSamples.recommendation,
+                ),
             ),
+            userName = "Aarav",
             onRetry = {},
+            onOpenLesson = {},
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun HomeNewLearnerPreview() {
+    PreviewContainer {
+        HomeContent(
+            state = UiState.Content(
+                HomeData(
+                    summary = LearningSamples.summary.copy(
+                        currentStreak = 0,
+                        totalXp = 0,
+                        level = 1,
+                    ),
+                    continueLearning = null,
+                    recommended = LearningSamples.recommendation,
+                ),
+            ),
+            userName = "",
+            onRetry = {},
+            onOpenLesson = {},
         )
     }
 }
@@ -22,7 +52,12 @@ private fun HomeConnectedPreview() {
 @Composable
 private fun HomeLoadingPreview() {
     PreviewContainer {
-        HomeContent(state = UiState.Loading, onRetry = {})
+        HomeContent(
+            state = UiState.Loading,
+            userName = "Aarav",
+            onRetry = {},
+            onOpenLesson = {},
+        )
     }
 }
 
@@ -35,7 +70,9 @@ private fun HomeErrorPreview() {
                 message = "We couldn't reach SmartMe. Check your connection and try again.",
                 code = "NETWORK_UNAVAILABLE",
             ),
+            userName = "Aarav",
             onRetry = {},
+            onOpenLesson = {},
         )
     }
 }

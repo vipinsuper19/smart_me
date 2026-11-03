@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -82,13 +83,18 @@ private fun MainScaffold(
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
+    val isTopLevel = backStackEntry?.destination?.let { destination ->
+        TopLevelDestination.entries.any { destination.hasRoute(it.route::class) }
+    } ?: true
 
     Scaffold(
         bottomBar = {
-            SmartMeBottomBar(
-                currentDestination = backStackEntry?.destination,
-                onSelect = navController::navigateToTopLevel,
-            )
+            if (isTopLevel) {
+                SmartMeBottomBar(
+                    currentDestination = backStackEntry?.destination,
+                    onSelect = navController::navigateToTopLevel,
+                )
+            }
         },
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
