@@ -19,6 +19,7 @@ import {
   CourseCardView,
   CourseDetailView,
   CourseLessonsView,
+  ContinueLearningView,
   LearningPathCardView,
   LearningPathDetailView,
   LessonCompletionView,
@@ -71,6 +72,11 @@ export class ContentController {
   @Get('courses/:id')
   getCourse(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<CourseDetailView> {
     return this.content.getCourse(user.id, id);
+  }
+
+  @Get('lessons/continue')
+  getContinueLearning(@CurrentUser() user: AuthUser): Promise<ContinueLearningView> {
+    return this.content.getContinueLearning(user.id);
   }
 
   @Get('lessons/recommended')

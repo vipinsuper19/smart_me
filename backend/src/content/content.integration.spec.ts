@@ -554,6 +554,25 @@ describeIfDatabase('Content read and progress integration', () => {
     expect(lessons.items[0].progress?.status).toBe(LessonProgressStatus.COMPLETED);
   });
 
+  it('offers the most recent accessible unfinished lesson to continue', async () => {
+    // The premium lesson started earlier is now locked and the first free
+    // lesson is completed, so there is nothing resumable yet.
+    await expect(content.getContinueLearning(userId)).resolves.toEqual({ item: null });
+
+    await content.startLesson(userId, freeLessonSecond.id);
+    const resume = await content.getContinueLearning(userId);
+    expect(resume.item?.lesson.id).toBe(freeLessonSecond.id);
+    expect(resume.item?.learningPath.id).toBe(path.id);
+    expect(resume.item?.progress).toMatchObject({
+      lessonId: freeLessonSecond.id,
+      status: LessonProgressStatus.IN_PROGRESS,
+    });
+    expect(resume.item?.lesson.progress?.lessonId).toBe(freeLessonSecond.id);
+
+    await content.completeLesson(userId, freeLessonSecond.id);
+    await expect(content.getContinueLearning(userId)).resolves.toEqual({ item: null });
+  });
+
   it('recommends the first accessible lesson matching stored preferences', async () => {
     await prisma.userPreference.upsert({
       where: { userId },

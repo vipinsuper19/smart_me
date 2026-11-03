@@ -31,6 +31,7 @@ import {
   CourseDetailView,
   CourseLessonsView,
   CourseRefView,
+  ContinueLearningView,
   effectiveAccessTier,
   isLocked,
   LearningPathCardView,
@@ -760,6 +761,112 @@ export class ContentService {
       progress: lesson.progress[0] ? toLessonProgressView(lesson.progress[0]) : null,
       nextLesson,
     };
+  }
+
+  async getContinueLearning(userId: string): Promise<ContinueLearningView> {
+    const rows = await this.prisma.lessonProgress.findMany({
+      where: {
+        userId,
+        status: LessonProgressStatus.IN_PROGRESS,
+        lesson: {
+          status: PublicationStatus.PUBLISHED,
+          module: {
+            course: {
+              status: PublicationStatus.PUBLISHED,
+              learningPath: { status: PublicationStatus.PUBLISHED },
+            },
+          },
+        },
+      },
+      orderBy: [{ lastAccessedAt: 'desc' }, { id: 'desc' }],
+      take: 20,
+      select: {
+        id: true,
+        userId: true,
+        lessonId: true,
+        status: true,
+        progressPercent: true,
+        lastBlockOrder: true,
+        startedAt: true,
+        lastAccessedAt: true,
+        completedAt: true,
+        timeSpentSeconds: true,
+        createdAt: true,
+        updatedAt: true,
+        lesson: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            summary: true,
+            objective: true,
+            difficulty: true,
+            estimatedMinutes: true,
+            accessTier: true,
+            order: true,
+            requiresQuiz: true,
+            module: {
+              select: {
+                id: true,
+                slug: true,
+                title: true,
+                order: true,
+                course: {
+                  select: {
+                    id: true,
+                    slug: true,
+                    title: true,
+                    accessTier: true,
+                    learningPath: { select: { id: true, slug: true, title: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (rows.length === 0) {
+      return { item: null };
+    }
+
+    // A learner whose entitlement lapsed cannot resume premium content until it
+    // is renewed, so the card falls through to the next accessible lesson.
+    const hasPremiumAccess = await hasActivePremium(this.prisma, userId);
+    for (const row of rows) {
+      const lesson = row.lesson;
+      const courseTier = lesson.module.course.accessTier;
+      const tier = effectiveAccessTier(courseTier, lesson.accessTier);
+      if (isLocked(tier, hasPremiumAccess)) {
+        continue;
+      }
+
+      const courseRef: CourseRefView = {
+        id: lesson.module.course.id,
+        slug: lesson.module.course.slug,
+        title: lesson.module.course.title,
+        accessTier: courseTier,
+        locked: isLocked(courseTier, hasPremiumAccess),
+      };
+      const progress = new Map<string, LessonProgress>([[row.lessonId, row]]);
+
+      return {
+        item: {
+          lesson: this.toLessonCard(
+            lesson,
+            lesson.module,
+            courseRef,
+            progress,
+            hasPremiumAccess,
+          ),
+          learningPath: lesson.module.course.learningPath,
+          progress: toLessonProgressView(row),
+        },
+      };
+    }
+
+    return { item: null };
   }
 
   async getRecommendedLesson(userId: string): Promise<RecommendedLessonView> {

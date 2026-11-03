@@ -229,6 +229,17 @@ export interface RecommendedLessonView {
   reason: RecommendationReason;
 }
 
+export interface ContinueLearningItemView {
+  lesson: LessonCardView;
+  learningPath: PathRefView;
+  progress: LessonProgressView;
+}
+
+export interface ContinueLearningView {
+  /** Null when the learner has no accessible lesson in progress. */
+  item: ContinueLearningItemView | null;
+}
+
 export function effectiveAccessTier(courseTier: AccessTier, lessonTier: AccessTier): AccessTier {
   return courseTier === AccessTier.PREMIUM || lessonTier === AccessTier.PREMIUM
     ? AccessTier.PREMIUM

@@ -325,6 +325,39 @@ with `locked: true` and reason `PREMIUM_CONTENT`.
 `reason` is one of `PREFERENCE_MATCH`, `FIRST_AVAILABLE` or `PREMIUM_CONTENT`.
 When no published lesson exists, the endpoint returns `404 NO_CONTENT_AVAILABLE`.
 
+### `GET /api/v1/lessons/continue`
+
+Returns the learner's most recently accessed unfinished lesson so Home can offer a
+"Continue learning" card. An `IN_PROGRESS` lesson is eligible only while its path,
+course and module are published; completed lessons are never returned. Premium
+content that is currently locked is skipped rather than surfaced as a dead end.
+
+```json
+{
+  "item": {
+    "lesson": { "...": "lesson card" },
+    "learningPath": {
+      "id": "clx_path_1",
+      "slug": "english-communication",
+      "title": "English Communication"
+    },
+    "progress": {
+      "lessonId": "clx_lesson_1",
+      "status": "IN_PROGRESS",
+      "progressPercent": 40,
+      "lastBlockOrder": 2,
+      "startedAt": "2026-10-21T10:10:00.000Z",
+      "lastAccessedAt": "2026-10-21T10:12:00.000Z",
+      "completedAt": null,
+      "timeSpentSeconds": 120
+    }
+  }
+}
+```
+
+`item` is `null` when nothing is in progress. The route returns `200` in that
+case; an empty resume state is normal for a new learner.
+
 ### `GET /api/v1/lessons/:id`
 
 Returns the playable lesson. Premium lessons return `403 PREMIUM_REQUIRED` for
