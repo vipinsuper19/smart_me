@@ -3,21 +3,27 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { errorMessage } from '@/lib/api';
-import { useAdminAuth } from '@/lib/auth';
+import { canViewBusinessRole, useAdminAuth } from '@/lib/auth';
+import type { AdminRole } from '@/lib/types';
 import { Alert, Button, Field, Input, Spinner } from '@/components/ui';
 
+/** Content editors have no business dashboard, so they land on their work. */
+function landingPath(role: AdminRole | undefined): string {
+  return canViewBusinessRole(role) ? '/dashboard' : '/content/learning-paths';
+}
+
 /**
- * Only same-origin relative paths are honoured, so a crafted `?next=//evil`
- * cannot turn the admin login into an open redirect.
+ * Honour a same-origin `?next=` so a crafted `//evil` cannot turn the admin
+ * login into an open redirect. Without one, use the role's home page.
  */
-function postLoginPath(): string {
+function postLoginPath(role: AdminRole | undefined): string {
   if (typeof window === 'undefined') {
-    return '/dashboard';
+    return landingPath(role);
   }
 
   const next = new URLSearchParams(window.location.search).get('next');
   if (!next || !next.startsWith('/') || next.startsWith('//')) {
-    return '/dashboard';
+    return landingPath(role);
   }
 
   return next;
@@ -33,7 +39,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && session) {
-      router.replace(postLoginPath());
+      router.replace(postLoginPath(session.admin.role));
     }
   }, [loading, router, session]);
 
@@ -42,8 +48,8 @@ export default function LoginPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await login(email.trim(), password);
-      router.replace(postLoginPath());
+      const signedIn = await login(email.trim(), password);
+      router.replace(postLoginPath(signedIn.admin.role));
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {

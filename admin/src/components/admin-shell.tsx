@@ -180,7 +180,7 @@ function SidebarLink({
 function SidebarContent({ onNavigate }: { onNavigate: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { admin, logout, canViewBusiness } = useAdminAuth();
+  const { admin, logout, canViewBusiness, isSuperAdmin } = useAdminAuth();
   const [signingOut, setSigningOut] = useState(false);
 
   const isActive = (item: NavItem) =>
@@ -188,13 +188,16 @@ function SidebarContent({ onNavigate }: { onNavigate: () => void }) {
       ? pathname === item.href
       : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-  const groups: NavGroup[] = [
-    {
+  // Only mirror navigation the role can actually open; otherwise the console
+  // offers links that answer 403.
+  const groups: NavGroup[] = [];
+  if (canViewBusiness) {
+    groups.push({
       label: 'Overview',
       items: [{ href: '/dashboard', label: 'Dashboard', icon: 'dashboard', exact: true }],
-    },
-    contentItems,
-  ];
+    });
+  }
+  groups.push(contentItems);
 
   if (canViewBusiness) {
     groups.push({
@@ -207,10 +210,12 @@ function SidebarContent({ onNavigate }: { onNavigate: () => void }) {
     });
   }
 
-  groups.push({
-    label: 'Governance',
-    items: [{ href: '/audit', label: 'Audit log', icon: 'audit' }],
-  });
+  if (isSuperAdmin) {
+    groups.push({
+      label: 'Governance',
+      items: [{ href: '/audit', label: 'Audit log', icon: 'audit' }],
+    });
+  }
 
   async function handleLogout() {
     setSigningOut(true);

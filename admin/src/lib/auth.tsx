@@ -23,7 +23,7 @@ interface AdminAuthContextValue {
   admin: AdminUser | null;
   session: AdminSession | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AdminSession>;
   logout: () => Promise<void>;
   hasRole: (...roles: AdminRole[]) => boolean;
   isSuperAdmin: boolean;
@@ -103,6 +103,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const next: AdminSession = { admin: response.admin, tokens: response.tokens };
     writeAdminSession(next);
     setSession(next);
+    return next;
   }, []);
 
   const logout = useCallback(async () => {
