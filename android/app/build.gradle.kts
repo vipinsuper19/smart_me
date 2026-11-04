@@ -103,6 +103,10 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // Google Play Billing. Purchases are verified by the backend before access
+    // is granted; the client library only opens the store flow.
+    implementation(libs.billing.ktx)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)

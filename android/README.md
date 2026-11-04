@@ -230,6 +230,47 @@ already converted to `ApiError` by `ApiExecutor`, so screens only render
 - **Tests**: lesson time formatting, scroll-progress/resume mapping and quiz
   saved-answer restoration, alongside the existing greeting/auth suites.
 
+## What Task 15 delivers
+
+- **Progress dashboard** over `GET /progress/overview` and `GET /progress/weekly`:
+  level/XP, current and best streak, daily goal, lifetime totals, a seven-day
+  activity chart with goal markers and per-topic completion. A learner with no
+  activity sees an honest empty state instead of sample numbers.
+- **Achievements** over `GET /achievements`: unlocked/locked cards with reward
+  XP, earned dates, progress toward locked goals, and empty/error/retry states.
+- **Profile** over `GET /profile`: signed-in identity, headline/occupation/city,
+  membership status, and rows for editing, learning preferences, notifications,
+  Premium, support and privacy. It keeps the cached session user as a fallback
+  while the profile request is in flight.
+- **Edit profile** with client validation for lengths, an ISO date of birth and
+  absolute http(s) avatar URLs. Blank fields are sent as explicit JSON nulls so
+  clearing a value round-trips instead of being ignored.
+- **Learning preferences** over `GET/PATCH /preferences`: goal, proficiency,
+  explanation language, daily target and interest chips, with validation and
+  optimistic-free save/refresh behaviour.
+- **Notification settings** over `GET/PATCH /notifications/preferences`: daily,
+  streak, incomplete-lesson and new-lesson reminders, a Material 3 time picker,
+  quiet-hours validation and a saved confirmation.
+- **SmartMe Premium** over `GET /subscriptions/plans` and `GET /subscriptions/me`
+  with Google Play Billing (`billing-ktx` 9.1.0). The app only opens the Play flow;
+  the backend verifies every purchase token before entitlement appears. Plans,
+  benefits, active/grace/cancelled status, restore and "manage in Play" are
+  covered, `BILLING_ENABLED=false` shows an honest unavailable message, and the
+  purchase result screen renders verified success, pending and failure without
+  ever granting access locally.
+- **Help and support** with static FAQs (offline use, progress, Premium,
+  cancellation, restore, deletion, reminders) and email/report intents. There is
+  no support-ticket backend in the MVP, so the screen never pretends to submit
+  one.
+- **Privacy and account deletion** over `GET/POST/DELETE
+  /account/deletion-request`: data/use/retention explanations, an optional
+  reason, confirmation, scheduled-deletion status, cancellation, and a forced
+  sign-out after a request because the backend revokes sessions immediately.
+- **Navigation and tests**: typed routes for every new screen, purchase results
+  pop back to the plan screen, and unit tests cover profile validation,
+  reminder-time parsing, Indian price grouping, purchase-result normalisation
+  and progress chart helpers.
+
 ## Splash, welcome, onboarding and account-creation design pass
 
 The launch experience follows the supplied splash reference;
@@ -305,12 +346,12 @@ correct.
 
 ## Deliberately not included yet
 
-- Progress dashboard, practice tab, editable profile fields and learning
-  preference editing (Task 15).
-- Daily-challenge and practice quizzes; the backend only exposes lesson quizzes.
+- Practice tab quizzes; the backend only exposes lesson quizzes.
+- Daily-challenge quizzes.
 - Time limits on quizzes (`timeLimitSeconds` is returned but not enforced).
 - Password reset and email verification screens.
-- Firebase / push notifications (Task 15).
+- Firebase Cloud Messaging device registration and push delivery. Reminder
+  preferences can be edited, but the app does not register a device token yet.
 
 ## Storage and backup
 

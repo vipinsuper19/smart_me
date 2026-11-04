@@ -47,3 +47,29 @@ data class LessonRoute(val lessonId: String)
 
 @Serializable
 data class QuizRoute(val lessonId: String)
+
+// Progress, profile settings and monetization screens. These also sit above the
+// tab graph and use the shared back affordance.
+@Serializable
+data object AchievementsRoute
+
+@Serializable
+data object EditProfileRoute
+
+@Serializable
+data object LearningPreferencesRoute
+
+@Serializable
+data object NotificationSettingsRoute
+
+@Serializable
+data object SubscriptionRoute
+
+@Serializable
+data class PurchaseResultRoute(val status: String, val reason: String? = null)
+
+@Serializable
+data object SupportRoute
+
+@Serializable
+data object PrivacyRoute

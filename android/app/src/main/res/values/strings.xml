@@ -27,7 +27,6 @@
     <string name="practice_title">Practice</string>
     <string name="practice_placeholder">Short quizzes and spaced review will live here, so a few minutes a day is enough.</string>
     <string name="progress_title">Progress</string>
-    <string name="progress_placeholder">Your XP, streak, quiz history and weak topics will be summarised here.</string>
 
     <!-- Splash -->
     <string name="splash_tagline">Small Lessons. Big Futures.</string>
@@ -131,8 +130,6 @@
     <string name="profile_account_title">Account</string>
     <string name="profile_signed_in_as">Signed in as</string>
     <string name="profile_sign_out">Sign out</string>
-    <string name="profile_learning_title">Learning preferences</string>
-    <string name="profile_learning_body">Edit your goal, level, language and daily target in an upcoming update.</string>
 
     <!-- Learning: shared -->
     <string name="learning_free">Free</string>
@@ -245,4 +242,231 @@
     <string name="quiz_retry_error">We couldn\'t start a new attempt.</string>
     <string name="quiz_pass_score">Pass mark: %1$d%%</string>
     <string name="quiz_attempt_number">Attempt %1$d</string>
+
+    <!-- Progress dashboard -->
+    <string name="progress_subtitle">See how far you\'ve come and what to do next.</string>
+    <string name="progress_longest_streak">Best: %1$d days</string>
+    <string name="progress_level_progress">%1$d%% of the way to level %2$d</string>
+    <string name="progress_weekly_title">This week</string>
+    <string name="progress_weekly_totals">%1$d lessons · %2$d min</string>
+    <string name="progress_weekly_goal_days">%1$d goal days</string>
+    <string name="progress_weekly_legend">A filled dot means you reached your daily goal.</string>
+    <string name="progress_weekly_minutes">%1$d</string>
+    <string name="progress_stats_title">Your numbers</string>
+    <string name="progress_stat_lessons">Lessons done</string>
+    <string name="progress_stat_quizzes">Quizzes done</string>
+    <string name="progress_stat_minutes">Minutes learned</string>
+    <string name="progress_stat_started">Lessons started</string>
+    <string name="progress_achievements_title">Achievements</string>
+    <string name="progress_achievements_body">%1$d of %2$d unlocked</string>
+    <string name="progress_achievements_body_unknown">See what you\'ve earned</string>
+    <string name="progress_topics_title">Topic progress</string>
+    <string name="progress_topic_lessons">%1$d of %2$d lessons complete</string>
+    <string name="progress_topics_empty">Topic progress appears after you start a learning path.</string>
+    <string name="progress_load_error_title">We couldn\'t load your progress</string>
+    <string name="progress_empty_title">No progress yet</string>
+    <string name="progress_empty_body">Complete a lesson or quiz and your level, streak and weekly activity will appear here.</string>
+
+    <!-- Achievements -->
+    <string name="achievements_title">Achievements</string>
+    <string name="achievements_summary">%1$d of %2$d unlocked</string>
+    <string name="achievements_earned">Earned</string>
+    <string name="achievements_locked">Locked</string>
+    <string name="achievements_reward">+%1$d XP</string>
+    <string name="achievements_progress">%1$d of %2$d</string>
+    <string name="achievements_earned_on">Earned %1$s</string>
+    <string name="achievements_keep_going">Keep going to unlock</string>
+    <string name="achievements_empty_title">No achievements yet</string>
+    <string name="achievements_empty_body">Achievements will appear here as you complete lessons and build streaks.</string>
+    <string name="achievements_load_error_title">We couldn\'t load your achievements</string>
+
+    <!-- Profile and settings -->
+    <string name="action_cancel">Cancel</string>
+    <string name="profile_load_error_title">We couldn\'t load your profile</string>
+    <string name="profile_section_learning">Learning</string>
+    <string name="profile_section_membership">Membership</string>
+    <string name="profile_section_support">Support and privacy</string>
+    <string name="profile_edit_action">Edit profile</string>
+    <string name="profile_edit_subtitle">Name, photo and personal details</string>
+    <string name="profile_preferences_action">Learning preferences</string>
+    <string name="profile_preferences_subtitle">Goal, level, language and daily target</string>
+    <string name="profile_notifications_action">Notification settings</string>
+    <string name="profile_notifications_subtitle">Reminders and reminder time</string>
+    <string name="profile_subscription_action">SmartMe Premium</string>
+    <string name="profile_subscription_subtitle">Plans, benefits and restore purchases</string>
+    <string name="profile_support_action">Help and support</string>
+    <string name="profile_support_subtitle">FAQs and how to contact us</string>
+    <string name="profile_privacy_action">Privacy and account deletion</string>
+    <string name="profile_privacy_subtitle">Your data, retention and deletion options</string>
+    <string name="profile_sign_out_title">Sign out?</string>
+    <string name="profile_sign_out_body">Your progress stays safely attached to your account.</string>
+    <string name="profile_version">SmartMe %1$s</string>
+
+    <!-- Edit profile -->
+    <string name="edit_profile_title">Edit profile</string>
+    <string name="edit_profile_subtitle">This information is private and only used to personalise your experience.</string>
+    <string name="edit_profile_name">Name</string>
+    <string name="edit_profile_headline">Headline</string>
+    <string name="edit_profile_occupation">Occupation</string>
+    <string name="edit_profile_city">City</string>
+    <string name="edit_profile_bio">About you</string>
+    <string name="edit_profile_date_of_birth">Date of birth</string>
+    <string name="edit_profile_avatar_url">Profile photo URL</string>
+    <string name="edit_profile_save">Save changes</string>
+    <string name="edit_profile_saving">Saving…</string>
+    <string name="edit_profile_load_error_title">We couldn\'t load your profile</string>
+    <string name="edit_profile_error_name">Use 80 characters or fewer.</string>
+    <string name="edit_profile_error_headline">Use 120 characters or fewer.</string>
+    <string name="edit_profile_error_occupation">Use 100 characters or fewer.</string>
+    <string name="edit_profile_error_city">Use 100 characters or fewer.</string>
+    <string name="edit_profile_error_bio">Use 500 characters or fewer.</string>
+    <string name="edit_profile_error_date">Use a valid date in YYYY-MM-DD format.</string>
+    <string name="edit_profile_error_avatar">Use a valid http or https image URL.</string>
+
+    <!-- Learning preferences -->
+    <string name="preferences_title">Learning preferences</string>
+    <string name="preferences_load_error_title">We couldn\'t load your preferences</string>
+    <string name="preferences_save">Save preferences</string>
+    <string name="preferences_saving">Saving…</string>
+    <string name="preferences_saved">Your preferences are saved.</string>
+
+    <!-- Notification settings -->
+    <string name="notifications_title">Notification settings</string>
+    <string name="notifications_subtitle">Choose which reminders you receive. You can change these at any time.</string>
+    <string name="notifications_load_error_title">We couldn\'t load your notification settings</string>
+    <string name="notifications_daily_title">Daily learning reminder</string>
+    <string name="notifications_daily_body">A gentle nudge to keep your daily habit going.</string>
+    <string name="notifications_incomplete_title">Finish a lesson</string>
+    <string name="notifications_incomplete_body">Remind me about a lesson I left open.</string>
+    <string name="notifications_streak_title">Streak reminder</string>
+    <string name="notifications_streak_body">A reminder when your streak is at risk.</string>
+    <string name="notifications_new_lesson_title">New lessons</string>
+    <string name="notifications_new_lesson_body">Tell me when a relevant new lesson is published.</string>
+    <string name="notifications_time_title">Reminder time</string>
+    <string name="notifications_time_body">When you would like to hear from us.</string>
+    <string name="notifications_time_set">Set time</string>
+    <string name="notifications_timezone">Times use your account time zone (%1$s).</string>
+    <string name="notifications_save">Save settings</string>
+    <string name="notifications_saving">Saving…</string>
+    <string name="notifications_saved">Your notification settings are saved.</string>
+
+    <!-- Subscription -->
+    <string name="subscription_title">SmartMe Premium</string>
+    <string name="subscription_subtitle">Premium unlocks the full learning library, extra practice and expanded audio.</string>
+    <string name="subscription_loading">Loading plans…</string>
+    <string name="subscription_load_error_title">We couldn\'t load subscription plans</string>
+    <string name="subscription_plans_empty">No plans available</string>
+    <string name="subscription_plans_empty_body">There are no subscription plans to show right now. Please try again in a moment.</string>
+    <string name="subscription_plans_title">Choose your plan</string>
+    <string name="subscription_hero_title">Learn without limits</string>
+    <string name="subscription_hero_body">Every premium plan includes the full course library, premium learning paths, additional interactive practice and expanded audio access.</string>
+    <string name="subscription_benefits_title">What\'s included</string>
+    <string name="subscription_benefit_library">Full course library</string>
+    <string name="subscription_benefit_practice">Additional interactive practice</string>
+    <string name="subscription_benefit_audio">Expanded audio access</string>
+    <string name="subscription_benefit_paths">Premium learning paths</string>
+    <string name="subscription_period_monthly">per month</string>
+    <string name="subscription_period_yearly">per year</string>
+    <string name="subscription_best_value">Best value</string>
+    <string name="subscription_subscribe">Subscribe with Google Play</string>
+    <string name="subscription_processing">Opening Google Play…</string>
+    <string name="subscription_restore">Restore purchases</string>
+    <string name="subscription_terms">Auto-renews at %1$s %2$s until you cancel. You can cancel anytime in Google Play. The final amount and taxes are confirmed by Google Play before payment.</string>
+    <string name="subscription_manage">Manage in Google Play</string>
+    <string name="subscription_active_title">Premium is active</string>
+    <string name="subscription_active_plan_fallback">SmartMe Premium</string>
+    <string name="subscription_active_body">You have full access to every lesson, practice set and premium path.</string>
+    <string name="subscription_renews_on">Renews on %1$s</string>
+    <string name="subscription_ends_on">Access ends on %1$s</string>
+    <string name="subscription_auto_renew_on">Auto-renew on</string>
+    <string name="subscription_auto_renew_off">Auto-renew off</string>
+    <string name="subscription_status_active">Active</string>
+    <string name="subscription_status_grace">Grace period</string>
+    <string name="subscription_status_paused">Paused</string>
+    <string name="subscription_status_on_hold">On hold</string>
+    <string name="subscription_status_canceled">Cancelled</string>
+    <string name="subscription_status_expired">Expired</string>
+    <string name="subscription_billing_disabled">Purchases are unavailable right now. Please try again later.</string>
+    <string name="subscription_billing_unavailable">Google Play Billing isn\'t available on this device.</string>
+    <string name="subscription_unavailable">This plan isn\'t available in Google Play yet.</string>
+    <string name="subscription_network_error">Check your connection and try again.</string>
+    <string name="subscription_timeout">Google Play took too long to respond. Please try again.</string>
+    <string name="subscription_purchase_failed_body">We couldn\'t complete your purchase. You haven\'t been charged for premium access.</string>
+    <string name="subscription_restore_none">No active purchases were found for this account.</string>
+    <string name="subscription_restore_success">Your purchase has been restored.</string>
+
+    <!-- Purchase result -->
+    <string name="purchase_result_title">Purchase</string>
+    <string name="purchase_success_title">You\'re Premium</string>
+    <string name="purchase_success_body">Your purchase is verified. Every lesson, practice set and premium path is now unlocked.</string>
+    <string name="purchase_success_action">Start learning</string>
+    <string name="purchase_pending_title">Payment pending</string>
+    <string name="purchase_pending_body">Google Play is still processing your payment. Premium unlocks automatically once the payment completes.</string>
+    <string name="purchase_pending_note">You can keep using the free lessons while you wait. We never show premium access before the server verifies it.</string>
+    <string name="purchase_pending_action">Got it</string>
+    <string name="purchase_failure_title">Purchase not completed</string>
+    <string name="purchase_failure_body">We couldn\'t complete your purchase. You haven\'t been charged for premium access.</string>
+    <string name="purchase_failure_action">Try again</string>
+    <string name="purchase_failure_dismiss">Not now</string>
+    <string name="purchase_verified_note">Premium access is verified by SmartMe before it is unlocked.</string>
+
+    <!-- Help and support -->
+    <string name="support_title">Help and support</string>
+    <string name="support_intro_title">How can we help?</string>
+    <string name="support_intro_body">Find quick answers below, or email us and a real person will take a look.</string>
+    <string name="support_contact_title">Contact support</string>
+    <string name="support_contact_body">Write to %1$s from the email address on your SmartMe account so we can find your progress.</string>
+    <string name="support_email_action">Email support</string>
+    <string name="support_report_action">Report a problem</string>
+    <string name="support_response_note">We aim to reply within two working days.</string>
+    <string name="support_no_email_app">No email app is set up on this device. Write to support@smartme.app from any email account.</string>
+    <string name="support_email_subject">SmartMe support</string>
+    <string name="support_report_subject">SmartMe problem report</string>
+    <string name="support_faq_title">Frequently asked questions</string>
+    <string name="support_privacy_hint">You can review or delete your data from Privacy and account deletion in your profile.</string>
+    <string name="support_faq_offline_q">Can I learn without internet?</string>
+    <string name="support_faq_offline_a">You need a connection to load lessons for the first time. If your connection drops mid-lesson, anything already saved stays on your account; reopen the lesson to continue where you left off.</string>
+    <string name="support_faq_progress_q">My progress or XP looks wrong.</string>
+    <string name="support_faq_progress_a">Progress is calculated on our servers from completed lessons and quizzes. Reopen the Progress tab to refresh. If a completed lesson still doesn\'t appear, email us with the lesson title and roughly when you finished it.</string>
+    <string name="support_faq_premium_q">What does Premium include?</string>
+    <string name="support_faq_premium_a">Premium unlocks the full course library, premium learning paths, additional practice and expanded audio access. The Subscription screen lists the benefits for each plan.</string>
+    <string name="support_faq_cancel_q">How do I cancel Premium?</string>
+    <string name="support_faq_cancel_a">Open Google Play, go to Payments and subscriptions, then Subscriptions. Choose SmartMe Premium and cancel. Access continues until the end of the paid period.</string>
+    <string name="support_faq_restore_q">I reinstalled the app and lost Premium.</string>
+    <string name="support_faq_restore_a">Sign in with the same account you used to buy Premium, open SmartMe Premium from your profile and tap Restore purchases.</string>
+    <string name="support_faq_delete_q">Can I delete my account?</string>
+    <string name="support_faq_delete_a">Yes. Open Privacy and account deletion from your profile. Deletion is scheduled after a short grace period, and signing in again before then cancels the request.</string>
+    <string name="support_faq_notifications_q">How do I stop reminders?</string>
+    <string name="support_faq_notifications_a">Open Notification settings from your profile and turn off the reminders you don\'t want. Reminder times use your account time zone.</string>
+
+    <!-- Privacy and account deletion -->
+    <string name="privacy_title">Privacy and account deletion</string>
+    <string name="privacy_intro_title">Your data, your choice</string>
+    <string name="privacy_intro_body">This page explains what SmartMe stores, why we store it and how to delete your account. No surprises.</string>
+    <string name="privacy_data_title">What we store</string>
+    <string name="privacy_data_body">Your account details such as email and the profile information you add, learning activity such as lesson progress, quiz attempts, XP and streaks, and settings such as your time zone and reminder preferences.</string>
+    <string name="privacy_use_title">How we use it</string>
+    <string name="privacy_use_body">To run your account, personalise lessons and reminders, show your progress, and keep premium access accurate. We do not sell your personal data.</string>
+    <string name="privacy_retention_title">How long we keep it</string>
+    <string name="privacy_retention_body">Active accounts keep their learning history so progress stays intact. When you request deletion, your account is scheduled for deletion after a short grace period, and you can cancel the request by signing in before then.</string>
+    <string name="privacy_delete_title">Delete your account</string>
+    <string name="privacy_delete_body">Requesting deletion signs you out on this device and schedules your account and learning data for permanent deletion. This cannot be undone once the grace period ends.</string>
+    <string name="privacy_delete_action">Request account deletion</string>
+    <string name="privacy_delete_confirm_title">Delete your account?</string>
+    <string name="privacy_delete_confirm_body">Your sessions will be revoked immediately and your account will be deleted after the grace period. You can add an optional reason below, then confirm.</string>
+    <string name="privacy_delete_reason_label">Reason (optional)</string>
+    <string name="privacy_delete_confirm_action">Request deletion</string>
+    <string name="privacy_delete_cancel">Keep my account</string>
+    <string name="privacy_requested_title">Deletion scheduled</string>
+    <string name="privacy_requested_body">Your request was received and you\'ve been signed out on this device. Sign in again before %1$s to cancel it.</string>
+    <string name="privacy_requested_body_unknown">Your request was received and you\'ve been signed out on this device. Sign in again before the grace period ends to cancel it.</string>
+    <string name="privacy_requested_action">Sign out</string>
+    <string name="privacy_pending_title">Deletion is scheduled</string>
+    <string name="privacy_pending_body">Requested on %1$s. Your account is scheduled for deletion on %2$s.</string>
+    <string name="privacy_pending_body_unknown">Your account is scheduled for deletion after the grace period.</string>
+    <string name="privacy_pending_cancel_action">Cancel deletion request</string>
+    <string name="privacy_pending_cancelling">Cancelling…</string>
+    <string name="privacy_cancel_success">Your deletion request was cancelled. Your account stays active.</string>
+    <string name="privacy_load_error_title">We couldn\'t load your deletion status</string>
+    <string name="privacy_contact_hint">Questions about privacy? Contact support from your profile.</string>
 </resources>
