@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApiErrorBody, ApiErrorDetail, ApiException } from '../errors/api-error';
+import { getRequestId, type RequestWithId } from '../logging/request-context';
 
 interface ErrorWithCode {
   code: string;
@@ -73,18 +74,20 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
     const request = context.getRequest<Request>();
+    const requestId = getRequestId(request as RequestWithId);
 
     const { status, body } = this.toError(exception);
+    const responseBody: ApiErrorBody = requestId ? { ...body, requestId } : body;
 
     if (status >= 500) {
       const stack = exception instanceof Error ? exception.stack : String(exception);
       this.logger.error(
-        `${request.method} ${request.originalUrl} -> ${status} ${body.code}`,
+        `${request.method} ${request.originalUrl} -> ${status} ${body.code} requestId=${requestId ?? '-'}`,
         stack,
       );
     }
 
-    response.status(status).json({ error: body });
+    response.status(status).json({ error: responseBody });
   }
 
   private toError(exception: unknown): { status: number; body: ApiErrorBody } {

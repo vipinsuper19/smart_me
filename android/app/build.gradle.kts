@@ -12,12 +12,23 @@ android {
     namespace = "com.smartme.app"
     compileSdk = 37
 
+    // Release values can be supplied per build so the same source produces
+    // versioned, environment-specific artifacts in CI.
+    val appVersionCode = providers.gradleProperty("SMARTME_VERSION_CODE")
+        .orNull
+        ?.toIntOrNull()
+        ?: 1
+    val appVersionName = providers.gradleProperty("SMARTME_VERSION_NAME")
+        .orNull
+        ?.takeIf { it.isNotBlank() }
+        ?: "0.1.0"
+
     defaultConfig {
         applicationId = "com.smartme.app"
         minSdk = 29
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -27,6 +38,27 @@ android {
             .orElse("")
             .get()
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
+    }
+
+    signingConfigs {
+        // CI provides these through Gradle properties after decoding the
+        // keystore. Without all four values the release build stays unsigned,
+        // which is useful for pull-request verification.
+        val storeFile = providers.gradleProperty("SMARTME_RELEASE_STORE_FILE").orNull
+        val storePassword = providers.gradleProperty("SMARTME_RELEASE_STORE_PASSWORD").orNull
+        val keyAlias = providers.gradleProperty("SMARTME_RELEASE_KEY_ALIAS").orNull
+        val keyPassword = providers.gradleProperty("SMARTME_RELEASE_KEY_PASSWORD").orNull
+
+        if (!storeFile.isNullOrBlank() && !storePassword.isNullOrBlank() &&
+            !keyAlias.isNullOrBlank() && !keyPassword.isNullOrBlank()
+        ) {
+            create("release") {
+                this.storeFile = file(storeFile)
+                this.storePassword = storePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -40,13 +72,25 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"$debugApiBaseUrl\"")
         }
         release {
+            val configuredBaseUrl = providers.gradleProperty("SMARTME_RELEASE_API_BASE_URL")
+                .orElse("https://api.smartme.app/api/v1/")
+                .get()
+            val releaseApiBaseUrl =
+                if (configuredBaseUrl.endsWith("/")) configuredBaseUrl else "$configuredBaseUrl/"
+            buildConfigField("String", "API_BASE_URL", "\"$releaseApiBaseUrl\"")
+
+            val releaseSigning = signingConfigs.findByName("release")
+            if (releaseSigning != null) {
+                signingConfig = releaseSigning
+            }
+
+            // R8 stays off until the Retrofit, kotlinx.serialization and Hilt
+            // rules have been validated against a real release build.
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Placeholder until a deployed environment exists. Override per build if needed.
-            buildConfigField("String", "API_BASE_URL", "\"https://api.smartme.app/api/v1/\"")
         }
     }
 

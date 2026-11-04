@@ -46,3 +46,6 @@ captures/
 playwright-report/
 test-results/
 tmp/
+
+# Database dumps produced by infra/scripts/backup-postgres.sh
+backups/

@@ -5,7 +5,7 @@
  * - a super-admin account
  * - a demo learner with onboarding preferences
  * - subscription plans and achievement definitions
- * - three published learning paths with four courses and eight playable lessons
+ * - three published learning paths with seven courses and 32 playable lessons
  * - quizzes with explanations, plus today's daily challenge
  *
  * Safe to re-run: every record is upserted by a natural key. Lesson blocks and
@@ -444,6 +444,388 @@ const curriculum: SeedPath[] = [
           },
         ],
       },
+      {
+        slug: 'english-for-daily-life',
+        title: 'English for Daily Life',
+        shortDescription:
+          'Handle everyday situations in English without freezing or over-preparing.',
+        description:
+          'Practical English for the situations you meet every week: ordering food, asking directions, shopping, phone calls and short messages. Each lesson gives you a small script you can adapt.',
+        objectives: [
+          'Make polite requests in shops and restaurants',
+          'Ask for and follow directions',
+          'Handle a phone call and leave a clear voicemail',
+          'Write a short, useful message',
+        ],
+        difficulty: ProficiencyLevel.BEGINNER,
+        estimatedMinutes: 40,
+        accessTier: AccessTier.FREE,
+        modules: [
+          {
+            slug: 'out-and-about',
+            title: 'Out and About',
+            description: 'Speak clearly in shops, restaurants and on the street.',
+            estimatedMinutes: 20,
+            lessons: [
+              {
+                slug: 'ordering-food',
+                title: 'Ordering Food with Confidence',
+                summary: 'Order what you actually want, ask questions and handle a mix-up.',
+                objective: 'Place a food order politely and ask one clarifying question.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                requiresQuiz: true,
+                blocks: [
+                  heading('A simple order has three parts'),
+                  paragraph(
+                    'Most restaurant conversations follow the same pattern: greet, order, confirm. You do not need long sentences — you need to be clear.',
+                  ),
+                  bulletList([
+                    'Start with “Could I have…?” or “I’d like…”',
+                    'Say the quantity and the item: “one masala dosa”',
+                    'Add one preference: “less spicy, please”',
+                    'Confirm the total before paying',
+                  ]),
+                  conversation([
+                    { speaker: 'You', text: 'Could I have one masala dosa, please?' },
+                    { speaker: 'Server', text: 'Sure. Anything to drink?' },
+                    {
+                      speaker: 'You',
+                      text: 'A small coffee, please. Could you make the dosa less spicy?',
+                    },
+                    { speaker: 'Server', text: 'Of course. That will be ₹180.' },
+                  ]),
+                  callout(
+                    'Hinglish tip',
+                    '“Please” aur “Could I…?” add karne se request polite lagti hai. Perfect grammar se zyada tone matter karta hai.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap(['Greet', 'Order clearly', 'Add one preference', 'Confirm the total']),
+                ],
+                quiz: {
+                  slug: 'quiz-ordering-food',
+                  title: 'Ordering food check',
+                  xpReward: 5,
+                  questions: [
+                    {
+                      type: QuestionType.SCENARIO,
+                      prompt: 'You want one coffee with less sugar. What is the clearest request?',
+                      explanation:
+                        'State the item and the preference in one short sentence. “Could I have” keeps it polite.',
+                      options: [
+                        { text: 'Coffee.' },
+                        {
+                          text: 'Could I have one coffee with less sugar, please?',
+                          isCorrect: true,
+                        },
+                        { text: 'Sugar is not good for me.' },
+                        { text: 'Give me coffee, no sugar, fast.' },
+                      ],
+                    },
+                    {
+                      type: QuestionType.TRUE_FALSE,
+                      prompt: 'You should confirm the total before paying.',
+                      explanation:
+                        'Confirming the total avoids surprises and gives you a chance to correct the order.',
+                      options: [{ text: 'True', isCorrect: true }, { text: 'False' }],
+                    },
+                  ],
+                },
+              },
+              {
+                slug: 'asking-directions',
+                title: 'Asking for Directions',
+                summary: 'Get to the right place even when you are not sure of the words.',
+                objective: 'Ask for directions and repeat the answer back to confirm it.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                blocks: [
+                  heading('Ask small, confirm often'),
+                  paragraph(
+                    'A good directions question is specific. Instead of “Where is the station?”, say which station and what you need nearby.',
+                  ),
+                  bulletList([
+                    '“Excuse me, how do I get to …?”',
+                    '“Is it walking distance?”',
+                    '“Should I turn left or right at the signal?”',
+                    'Repeat back: “So, straight and then left at the bank?”',
+                  ]),
+                  conversation([
+                    { speaker: 'You', text: 'Excuse me, how do I get to the metro station?' },
+                    {
+                      speaker: 'Passer-by',
+                      text: 'Go straight for two minutes, then turn left after the bank.',
+                    },
+                    {
+                      speaker: 'You',
+                      text: 'Straight, then left after the bank. Is it walking distance?',
+                    },
+                    { speaker: 'Passer-by', text: 'Yes, about five minutes.' },
+                  ]),
+                  callout(
+                    'Useful phrase',
+                    '“Sorry, I didn’t catch that. Could you say it again more slowly?”',
+                  ),
+                  recap([
+                    'Be specific',
+                    'Ask about distance',
+                    'Repeat the route',
+                    'Thank the person',
+                  ]),
+                ],
+              },
+              {
+                slug: 'shopping-and-bargaining',
+                title: 'Shopping and Polite Bargaining',
+                summary: 'Ask about size, price and returns without sounding rude.',
+                objective: 'Ask three useful questions in a shop and respond to a price.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                blocks: [
+                  heading('Ask before you decide'),
+                  paragraph(
+                    'Shopping English is mostly questions. Ask early so you do not waste time or money on the wrong thing.',
+                  ),
+                  bulletList([
+                    '“Do you have this in a larger size?”',
+                    '“How much is this?”',
+                    '“Can I exchange it if it does not fit?”',
+                    '“Is there any discount on this?”',
+                  ]),
+                  conversation([
+                    { speaker: 'You', text: 'How much is this shirt?' },
+                    { speaker: 'Shopkeeper', text: '₹899.' },
+                    {
+                      speaker: 'You',
+                      text: 'It’s a little above my budget. Is there any discount if I take two?',
+                    },
+                    { speaker: 'Shopkeeper', text: 'I can do ₹1,600 for two.' },
+                  ]),
+                  callout(
+                    'Hinglish tip',
+                    'Bargaining mein smile aur “any discount?” kaafi hai. Aggressive tone se deal bigad jaati hai.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap(['Ask for size', 'Ask the price', 'Check returns', 'Negotiate politely']),
+                ],
+              },
+              {
+                slug: 'talking-to-strangers',
+                title: 'Starting a Conversation with a Stranger',
+                summary: 'Two safe openers and one graceful exit.',
+                objective: 'Start and end a short conversation with a stranger.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                blocks: [
+                  heading('Use the shared moment'),
+                  paragraph(
+                    'You already have something in common with a stranger: the place, the event or the wait. Use that instead of a personal question.',
+                  ),
+                  bulletList([
+                    '“Is this your first time here?”',
+                    '“Have you tried the food here?”',
+                    '“That was a long queue, wasn’t it?”',
+                    'To leave: “It was nice talking to you. I should get going.”',
+                  ]),
+                  callout(
+                    'Comfort check',
+                    'If the other person gives one-word answers and does not ask anything back, let the conversation end. That is polite, not rude.',
+                  ),
+                  conversation([
+                    { speaker: 'You', text: 'Is this your first time at this workshop?' },
+                    { speaker: 'Stranger', text: 'Yes. I mostly came for the networking session.' },
+                    { speaker: 'You', text: 'Same here. Which session are you staying for?' },
+                  ]),
+                  recap([
+                    'Use the shared moment',
+                    'Ask an open question',
+                    'Share a little',
+                    'Exit politely',
+                  ]),
+                ],
+              },
+            ],
+          },
+          {
+            slug: 'phone-and-digital',
+            title: 'Phone and Digital',
+            description: 'Sound clear on a call and write messages people can act on.',
+            estimatedMinutes: 20,
+            lessons: [
+              {
+                slug: 'making-a-phone-call',
+                title: 'Making a Phone Call',
+                summary: 'Open the call, state your purpose and confirm the next step.',
+                objective: 'Make a short, purposeful phone call in English.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                requiresQuiz: true,
+                blocks: [
+                  heading('Say who you are and why you are calling'),
+                  paragraph(
+                    'On a call, the other person cannot see your face. Give context in the first two sentences.',
+                  ),
+                  bulletList([
+                    '“Hello, this is Asha calling from …”',
+                    '“I’m calling about …”',
+                    '“Is this a good time to talk?”',
+                    '“Let me confirm: you will send the form by Friday?”',
+                  ]),
+                  conversation([
+                    {
+                      speaker: 'You',
+                      text: 'Hello, this is Asha calling about the delivery scheduled for tomorrow.',
+                    },
+                    { speaker: 'Support', text: 'Yes, how can I help?' },
+                    {
+                      speaker: 'You',
+                      text: 'The address on the order is missing a flat number. Can I update it?',
+                    },
+                    { speaker: 'Support', text: 'Sure, please share the order ID.' },
+                  ]),
+                  callout(
+                    'Hinglish tip',
+                    'Phone par dheere boliye aur naam clearly boliye. “This is…” se introduction simple ho jata hai.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap([
+                    'Introduce yourself',
+                    'State the purpose',
+                    'Ask if it is a good time',
+                    'Confirm the next step',
+                  ]),
+                ],
+                quiz: {
+                  slug: 'quiz-making-a-phone-call',
+                  title: 'Phone call check',
+                  xpReward: 5,
+                  questions: [
+                    {
+                      type: QuestionType.SINGLE_CHOICE,
+                      prompt: 'Which opening gives the listener context immediately?',
+                      explanation:
+                        'The listener needs your name and the reason for the call before the details.',
+                      options: [
+                        { text: 'Hello? Hello? Can you hear me?' },
+                        {
+                          text: 'Hello, this is Asha calling about tomorrow’s delivery.',
+                          isCorrect: true,
+                        },
+                        { text: 'I have a problem.' },
+                        { text: 'Who is this?' },
+                      ],
+                    },
+                    {
+                      type: QuestionType.TRUE_FALSE,
+                      prompt: 'It is useful to confirm the next step before ending a call.',
+                      explanation:
+                        'A short recap prevents misunderstandings about who will do what.',
+                      options: [{ text: 'True', isCorrect: true }, { text: 'False' }],
+                    },
+                  ],
+                },
+              },
+              {
+                slug: 'leaving-a-voicemail',
+                title: 'Leaving a Clear Voicemail',
+                summary: 'A 20-second message with your name, reason and number.',
+                objective: 'Leave a voicemail that is easy to return.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                blocks: [
+                  heading('The four-part voicemail'),
+                  paragraph(
+                    'A good voicemail is shorter than most people think. Say who you are, why you called, what you need and how to reach you.',
+                  ),
+                  bulletList([
+                    'Name and organisation',
+                    'One sentence on the reason',
+                    'The action you need',
+                    'Your number, said slowly',
+                  ]),
+                  conversation([
+                    {
+                      speaker: 'You',
+                      text: 'Hello, this is Asha Sharma from Bright Stores. I’m calling about invoice 204. Could you confirm the payment date? You can reach me on 98… again, 98… Thank you.',
+                    },
+                  ]),
+                  callout(
+                    'Small habit',
+                    'Say your phone number twice, slowly. Most people replay voicemails only to catch the number.',
+                  ),
+                  recap(['Name', 'Reason', 'Action', 'Number twice']),
+                ],
+              },
+              {
+                slug: 'writing-a-message',
+                title: 'Writing a Short Message',
+                summary: 'Messages that get a reply, not a “what?”.',
+                objective: 'Write a short message with context, request and deadline.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                blocks: [
+                  heading('Context, request, deadline'),
+                  paragraph(
+                    'A useful message answers three questions before the reader asks them: what is this about, what do you need, and by when?',
+                  ),
+                  paragraph(
+                    'Weak: “Hi, are you free?” Strong: “Hi Ravi, can we move tomorrow’s 4 pm review to 5 pm? I have a client call at 4. Please confirm by 6 pm today.”',
+                  ),
+                  bulletList([
+                    'Put the request in the first two lines',
+                    'Give the reason in one sentence',
+                    'Use a specific time, not “soon”',
+                    'End with a clear question',
+                  ]),
+                  callout(
+                    'Hinglish tip',
+                    'Message mein “sometime” ya “ASAP” likhne se confusion badhta hai. Exact time dijiye.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap(['Context', 'Request', 'Reason', 'Deadline']),
+                ],
+              },
+              {
+                slug: 'apologising-and-rescheduling',
+                title: 'Apologising and Rescheduling',
+                summary: 'Fix a missed commitment without over-explaining.',
+                objective: 'Apologise for a change and propose a new time.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.FREE,
+                blocks: [
+                  heading('Apologise once, then solve'),
+                  paragraph(
+                    'A good apology is short: acknowledge the impact, take responsibility, offer a concrete fix. Long excuses make the other person do more work.',
+                  ),
+                  bulletList([
+                    '“I’m sorry, I won’t be able to make the 3 pm call.”',
+                    '“That was my mistake — I missed the reminder.”',
+                    '“Can we move it to 5 pm today or 10 am tomorrow?”',
+                    '“I’ve sent the updated invite.”',
+                  ]),
+                  conversation([
+                    {
+                      speaker: 'You',
+                      text: 'Hi Meera, I’m sorry — I have to reschedule our 3 pm call. I double-booked a client meeting. Would 5 pm today or 10 am tomorrow work for you?',
+                    },
+                    { speaker: 'Meera', text: '5 pm works. Thanks for the quick note.' },
+                  ]),
+                  callout(
+                    'Avoid',
+                    'Do not say “I’m sorry but…” and then blame traffic, the weather and your phone. One reason is enough.',
+                  ),
+                  recap([
+                    'Acknowledge',
+                    'Take responsibility',
+                    'Offer two times',
+                    'Confirm the change',
+                  ]),
+                ],
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
   {
@@ -595,6 +977,355 @@ const curriculum: SeedPath[] = [
           },
         ],
       },
+      {
+        slug: 'workplace-success',
+        title: 'Workplace Success',
+        shortDescription:
+          'Build trust in your first job: updates, feedback, mistakes and boundaries.',
+        description:
+          'A practical course for early-career professionals. Learn how to clarify expectations, communicate progress and handle difficult moments without losing credibility.',
+        objectives: [
+          'Clarify what success looks like in your role',
+          'Give short, useful status updates',
+          'Receive feedback and own mistakes',
+          'Disagree and negotiate deadlines professionally',
+        ],
+        difficulty: ProficiencyLevel.INTERMEDIATE,
+        estimatedMinutes: 40,
+        accessTier: AccessTier.PREMIUM,
+        modules: [
+          {
+            slug: 'first-90-days',
+            title: 'Your First 90 Days',
+            description: 'Understand the job before trying to change it.',
+            estimatedMinutes: 20,
+            lessons: [
+              {
+                slug: 'understanding-your-role',
+                title: 'Understanding Your Role',
+                summary: 'Turn a vague job description into clear weekly priorities.',
+                objective: 'Identify your three main responsibilities and one success measure.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Clarify before you optimise'),
+                  paragraph(
+                    'New joiners often work hard on the wrong things. Before your first full week, ask your manager what success looks like in 30, 60 and 90 days.',
+                  ),
+                  bulletList([
+                    'Which three outcomes matter most this quarter?',
+                    'What does “done” look like for each one?',
+                    'Who depends on my work, and who do I depend on?',
+                    'What should I check with you before deciding?',
+                  ]),
+                  callout(
+                    'Useful question',
+                    '“If I do only three things well this month, what should they be?”',
+                  ),
+                  recap([
+                    'Three outcomes',
+                    'Definition of done',
+                    'Dependencies',
+                    'Escalation points',
+                  ]),
+                ],
+              },
+              {
+                slug: 'asking-good-questions',
+                title: 'Asking Questions at Work',
+                summary: 'Ask once, clearly, and show what you already tried.',
+                objective: 'Ask a question that respects the other person’s time.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('A good question includes context'),
+                  paragraph(
+                    '“It’s not working” forces the other person to interview you. A useful question says what you tried, what happened and what you need.',
+                  ),
+                  bulletList([
+                    'What I am trying to do',
+                    'What I tried',
+                    'What happened instead',
+                    'The specific decision or answer I need',
+                  ]),
+                  paragraph(
+                    'Example: “I’m trying to publish the new lesson. I saved it as draft and clicked publish, but the app still shows the old version. Should I wait, or is there a cache step I missed?”',
+                  ),
+                  callout(
+                    'Hinglish tip',
+                    'Sawaal poochhne se pehle ek minute khud try kijiye. Phir context ke saath poochhiye — log zyada help karte hain.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap(['Context', 'What you tried', 'What happened', 'Exact ask']),
+                ],
+              },
+              {
+                slug: 'giving-a-status-update',
+                title: 'Giving a Status Update',
+                summary: 'Report progress in a way that surfaces risk early.',
+                objective: 'Write a three-line status update with progress, risk and next step.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                requiresQuiz: true,
+                blocks: [
+                  heading('Progress, risk, next step'),
+                  paragraph(
+                    'A status update is not a diary. It tells the reader what changed, what might go wrong and what happens next.',
+                  ),
+                  bulletList([
+                    'Done: what is complete or shipped',
+                    'In progress: what is moving and when it lands',
+                    'Risk: what could delay it and what you need',
+                    'Next: the next decision or milestone',
+                  ]),
+                  paragraph(
+                    'Example: “Done: the quiz screen and results. In progress: offline retry, expected Thursday. Risk: the API timeout test needs a staging URL. Next: review with Priya on Friday.”',
+                  ),
+                  callout(
+                    'Rule of thumb',
+                    'If a risk is worth mentioning later, it is worth mentioning now. Early bad news is a plan; late bad news is a surprise.',
+                  ),
+                  recap(['Done', 'In progress', 'Risk', 'Next step']),
+                ],
+                quiz: {
+                  slug: 'quiz-giving-a-status-update',
+                  title: 'Status update check',
+                  xpReward: 5,
+                  questions: [
+                    {
+                      type: QuestionType.SINGLE_CHOICE,
+                      prompt: 'Which update is most useful to a busy manager?',
+                      explanation:
+                        'A useful update names progress, risk and the next step. It does not require follow-up questions.',
+                      options: [
+                        { text: 'Working on it.' },
+                        { text: 'Lots of progress this week.' },
+                        {
+                          text: 'Quiz screen done; retry work lands Thursday; API test blocked on a staging URL; review Friday.',
+                          isCorrect: true,
+                        },
+                        { text: 'Will update soon.' },
+                      ],
+                    },
+                    {
+                      type: QuestionType.TRUE_FALSE,
+                      prompt: 'Risks should be shared only after they become delays.',
+                      explanation:
+                        'Early risks let the team adjust the plan. Waiting turns a risk into a surprise.',
+                      options: [{ text: 'True' }, { text: 'False', isCorrect: true }],
+                    },
+                  ],
+                },
+              },
+              {
+                slug: 'receiving-feedback',
+                title: 'Receiving Feedback Well',
+                summary: 'Listen, clarify and act without getting defensive.',
+                objective: 'Respond to critical feedback with a clear next action.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Separate the message from the delivery'),
+                  paragraph(
+                    'Feedback can be clumsy and still be useful. Your job in the moment is to understand the message, not to win the conversation.',
+                  ),
+                  bulletList([
+                    'Listen without interrupting',
+                    'Ask for one concrete example',
+                    'Summarise what you heard',
+                    'Name one thing you will change',
+                  ]),
+                  conversation([
+                    {
+                      speaker: 'Manager',
+                      text: 'Your updates are too detailed. I lose the main point.',
+                    },
+                    {
+                      speaker: 'You',
+                      text: 'That’s helpful. So you want the decision or risk first, and details only if needed?',
+                    },
+                    {
+                      speaker: 'Manager',
+                      text: 'Yes — three lines maximum unless something is on fire.',
+                    },
+                  ]),
+                  callout(
+                    'Hinglish tip',
+                    'Feedback ko personal attack mat samjhiye. “Ek example dijiye” poochhna professional hota hai.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap(['Listen', 'Ask for an example', 'Summarise', 'Name one change']),
+                ],
+              },
+            ],
+          },
+          {
+            slug: 'working-with-people',
+            title: 'Working with People',
+            description: 'Handle mistakes, disagreement and boundaries.',
+            estimatedMinutes: 20,
+            lessons: [
+              {
+                slug: 'handling-a-mistake',
+                title: 'Handling a Mistake at Work',
+                summary: 'Contain the damage, own it and prevent a repeat.',
+                objective: 'Report a mistake with impact, fix and prevention.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                requiresQuiz: true,
+                blocks: [
+                  heading('Report early, with a fix'),
+                  paragraph(
+                    'Everyone makes mistakes. Trust is lost when the mistake is hidden or the fix is unclear.',
+                  ),
+                  bulletList([
+                    'Say what happened in one line',
+                    'State the impact and who is affected',
+                    'Propose the immediate fix',
+                    'Explain the change that prevents a repeat',
+                  ]),
+                  conversation([
+                    {
+                      speaker: 'You',
+                      text: 'I sent the client the old price list. They have not opened it yet. I’ve recalled the email and will resend the correct file in ten minutes. I’ve also added a checklist step before sending pricing.',
+                    },
+                    {
+                      speaker: 'Manager',
+                      text: 'Thanks for flagging it quickly. Send the corrected file and copy me.',
+                    },
+                  ]),
+                  callout(
+                    'Avoid',
+                    'Do not lead with a long explanation of why it was not really your fault. Lead with impact and fix.',
+                  ),
+                  recap(['What happened', 'Impact', 'Immediate fix', 'Prevention']),
+                ],
+                quiz: {
+                  slug: 'quiz-handling-a-mistake',
+                  title: 'Mistake recovery check',
+                  xpReward: 5,
+                  questions: [
+                    {
+                      type: QuestionType.SCENARIO,
+                      prompt:
+                        'You emailed a customer the wrong document. What is the best first message?',
+                      explanation:
+                        'The team needs the impact and the fix first. Explanations can follow once the situation is contained.',
+                      options: [
+                        { text: 'Nobody noticed, so I will wait.' },
+                        {
+                          text: 'I sent the wrong file; here is the correct one and what I changed to prevent it.',
+                          isCorrect: true,
+                        },
+                        { text: 'The file system is confusing.' },
+                        { text: 'Can someone else handle this?' },
+                      ],
+                    },
+                    {
+                      type: QuestionType.TRUE_FALSE,
+                      prompt: 'A prevention step makes a mistake report more credible.',
+                      explanation:
+                        'It shows you have thought about the system, not only the apology.',
+                      options: [{ text: 'True', isCorrect: true }, { text: 'False' }],
+                    },
+                  ],
+                },
+              },
+              {
+                slug: 'disagreeing-professionally',
+                title: 'Disagreeing Professionally',
+                summary: 'Challenge an idea without challenging the person.',
+                objective: 'Disagree using evidence and a shared goal.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Aim at the problem, not the person'),
+                  paragraph(
+                    'Disagreement is useful when it improves the decision. It becomes expensive when people feel attacked.',
+                  ),
+                  bulletList([
+                    'Name the shared goal',
+                    'Ask about the reasoning before rejecting it',
+                    'Offer evidence or a concrete alternative',
+                    'Signal when you are okay with being overruled',
+                  ]),
+                  conversation([
+                    {
+                      speaker: 'You',
+                      text: 'I understand the goal is to ship this week. My concern is that the retry flow has no test yet. Could we ship without it and add the test Monday, or delay one day?',
+                    },
+                    { speaker: 'Lead', text: 'Let’s ship behind a flag and test Monday.' },
+                  ]),
+                  callout(
+                    'Useful phrase',
+                    '“Help me understand the trade-off you’re seeing.” This invites reasoning instead of a fight.',
+                  ),
+                  recap(['Shared goal', 'Ask first', 'Bring evidence', 'Accept the decision']),
+                ],
+              },
+              {
+                slug: 'negotiating-a-deadline',
+                title: 'Negotiating a Deadline',
+                summary: 'Trade scope and time openly instead of silently missing dates.',
+                objective: 'Renegotiate a deadline by offering options.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('A deadline is a trade-off, not a test'),
+                  paragraph(
+                    'When a date is impossible, say so early and bring options. A calm trade-off conversation is better than a late surprise.',
+                  ),
+                  bulletList([
+                    'State the current risk with evidence',
+                    'Offer a smaller scope for the same date',
+                    'Offer the full scope with a new date',
+                    'Ask which outcome matters more',
+                  ]),
+                  paragraph(
+                    'Example: “To keep Friday, I can ship the lesson player without audio download. With audio, I need until Wednesday. Which is more useful for the pilot?”',
+                  ),
+                  callout(
+                    'Hinglish tip',
+                    'Deadline miss hone ke baad batane se better hai pehle options ke saath batana. “What if we…” se shuru kijiye.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap([
+                    'Raise early',
+                    'Show the risk',
+                    'Offer two options',
+                    'Ask for the priority',
+                  ]),
+                ],
+              },
+              {
+                slug: 'asking-for-a-raise',
+                title: 'Asking for a Raise with Evidence',
+                summary: 'Build a case from outcomes, scope and market context.',
+                objective: 'Prepare a raise conversation with three pieces of evidence.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Make the conversation about value'),
+                  paragraph(
+                    'A raise request is strongest when it connects your outcomes to the team’s goals. “I need more money” is a need; “here is the value I added and the scope I now own” is a case.',
+                  ),
+                  bulletList([
+                    'Three outcomes you delivered, with numbers if possible',
+                    'Work you now own beyond your original role',
+                    'Market range for similar roles in your city',
+                    'A specific ask and a timeline',
+                  ]),
+                  callout(
+                    'Prepare for “not now”',
+                    'Ask what would need to be true in six months, and get it in writing. A clear path is better than a vague promise.',
+                  ),
+                  recap(['Outcomes', 'Scope', 'Market range', 'Specific ask']),
+                ],
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
   {
@@ -707,6 +1438,336 @@ const curriculum: SeedPath[] = [
                     ContentLanguage.HINGLISH,
                   ),
                   recap(['3–6 months', 'Separate account', 'Emergencies only', 'Replenish']),
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        slug: 'smart-money-habits',
+        title: 'Smart Money Habits',
+        shortDescription:
+          'Read your payslip, track spending and avoid the most common money traps.',
+        description:
+          'A practical follow-up to Money Basics. These lessons explain salary deductions, debt, insurance and first investment concepts in plain language. They are educational and do not provide personalised financial advice.',
+        objectives: [
+          'Read the main lines on a salary slip',
+          'Track spending without guilt',
+          'Compare loans and avoid expensive traps',
+          'Understand emergency funds and insurance basics',
+        ],
+        difficulty: ProficiencyLevel.INTERMEDIATE,
+        estimatedMinutes: 40,
+        accessTier: AccessTier.PREMIUM,
+        modules: [
+          {
+            slug: 'know-your-money',
+            title: 'Know Your Money',
+            description: 'Understand what arrives, what leaves and why.',
+            estimatedMinutes: 20,
+            lessons: [
+              {
+                slug: 'reading-your-salary-slip',
+                title: 'Reading Your Salary Slip',
+                summary: 'Understand gross pay, deductions and take-home pay.',
+                objective: 'Identify the main lines on a salary slip and calculate take-home pay.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                requiresQuiz: true,
+                blocks: [
+                  heading('Gross is not what reaches your bank'),
+                  paragraph(
+                    'Your salary slip starts with gross pay and subtracts deductions. The amount credited is your net pay, also called take-home pay.',
+                  ),
+                  bulletList([
+                    'Basic salary: the fixed base used for many calculations',
+                    'Allowances: housing, transport, special and other additions',
+                    'Statutory deductions: provident fund, professional tax, income tax',
+                    'Other deductions: insurance premiums, loan repayments, canteen',
+                    'Net pay: gross pay minus all deductions',
+                  ]),
+                  callout(
+                    'Check every month',
+                    'Compare the credited amount with the net pay line. If they differ, ask payroll before the next cycle.',
+                  ),
+                  callout(
+                    'Educational only',
+                    'Tax rules change and depend on your situation. Use official guidance or a qualified professional for filing decisions.',
+                  ),
+                  recap(['Gross', 'Allowances', 'Deductions', 'Net pay']),
+                ],
+                quiz: {
+                  slug: 'quiz-reading-salary-slip',
+                  title: 'Salary slip check',
+                  xpReward: 5,
+                  questions: [
+                    {
+                      type: QuestionType.SINGLE_CHOICE,
+                      prompt: 'What is net pay?',
+                      explanation:
+                        'Net pay is the amount left after all deductions are subtracted from gross pay.',
+                      options: [
+                        { text: 'Gross pay plus allowances' },
+                        { text: 'Gross pay minus deductions', isCorrect: true },
+                        { text: 'Only the basic salary' },
+                        { text: 'The annual bonus' },
+                      ],
+                    },
+                    {
+                      type: QuestionType.TRUE_FALSE,
+                      prompt: 'Professional tax and provident fund can appear as deductions.',
+                      explanation: 'Both are common statutory deductions on Indian salary slips.',
+                      options: [{ text: 'True', isCorrect: true }, { text: 'False' }],
+                    },
+                  ],
+                },
+              },
+              {
+                slug: 'tracking-your-spending',
+                title: 'Tracking Your Spending',
+                summary: 'A ten-minute weekly habit that replaces guesswork.',
+                objective: 'Set up a simple weekly spending review.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('You cannot fix what you cannot see'),
+                  paragraph(
+                    'Most people underestimate small, frequent spending. You do not need a complex app; you need one place where every payment is visible.',
+                  ),
+                  bulletList([
+                    'Use one account or card for most spending',
+                    'Export or review the statement once a week',
+                    'Group spending into needs, wants and savings',
+                    'Look for one change, not ten',
+                  ]),
+                  callout(
+                    'Ten-minute review',
+                    'Ask three questions: What surprised me? What can I reduce next week? What worked well?',
+                  ),
+                  callout(
+                    'Hinglish tip',
+                    'Chhoti-chhoti spending yaad nahi rehti. Statement ek jagah rakhiye aur hafte mein ek baar dekhiye.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap(['One account', 'Weekly review', 'Three groups', 'One change']),
+                ],
+              },
+              {
+                slug: 'needs-wants-values',
+                title: 'Needs, Wants and Values',
+                summary: 'Spend on purpose instead of copying someone else’s lifestyle.',
+                objective: 'Classify three recent expenses and name one value behind them.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('A want is not a failure'),
+                  paragraph(
+                    'A healthy budget includes wants. The problem is not spending on pleasure; it is spending on things you do not actually value.',
+                  ),
+                  bulletList([
+                    'Needs keep your life running: rent, food, medicine, transport',
+                    'Wants improve life: dining out, streaming, new clothes',
+                    'Values explain the choice: family time, health, learning, status',
+                    'A value-led want is easier to enjoy without guilt',
+                  ]),
+                  callout(
+                    'Try this',
+                    'Before a non-essential purchase, wait 24 hours. If you still want it and it fits the plan, buy it without guilt.',
+                  ),
+                  recap(['Needs', 'Wants', 'Values', 'Wait 24 hours']),
+                ],
+              },
+              {
+                slug: 'debt-without-shame',
+                title: 'Debt Without Shame',
+                summary: 'Separate useful debt from expensive debt and make a payoff plan.',
+                objective: 'Compare two debts by interest rate and choose a payoff order.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Not all debt is the same'),
+                  paragraph(
+                    'Debt used to buy an asset or build a skill can be manageable. Debt used to cover everyday spending at a high interest rate becomes a trap.',
+                  ),
+                  bulletList([
+                    'List every debt: balance, interest rate, minimum payment',
+                    'Pay minimums on everything first',
+                    'Attack the highest-interest debt with extra money',
+                    'Avoid new borrowing while paying down expensive debt',
+                  ]),
+                  callout(
+                    'Warning signs',
+                    'Borrowing to pay another loan, missing minimum payments, or hiding debt from family are signals to get help early.',
+                  ),
+                  callout(
+                    'Hinglish tip',
+                    'Loan lena buri baat nahi hai. Lekin interest rate aur repayment plan samajhna zaroori hai.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap([
+                    'List debts',
+                    'Pay minimums',
+                    'Target high interest',
+                    'Stop new borrowing',
+                  ]),
+                ],
+              },
+            ],
+          },
+          {
+            slug: 'build-your-safety-net',
+            title: 'Build Your Safety Net',
+            description: 'Protect yourself before chasing returns.',
+            estimatedMinutes: 20,
+            lessons: [
+              {
+                slug: 'emergency-fund-in-practice',
+                title: 'Emergency Fund in Practice',
+                summary: 'Set a target, automate it and decide what counts as an emergency.',
+                objective: 'Calculate a starter emergency-fund target and a monthly transfer.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Make the safety net boring'),
+                  paragraph(
+                    'An emergency fund should be easy to reach and not exciting. A separate savings account or liquid fund works better than something you check every day.',
+                  ),
+                  bulletList([
+                    'Add up one month of essential expenses',
+                    'Multiply by 3 for a starter target and 6 for a full target',
+                    'Automate a transfer on salary day',
+                    'Define emergencies in advance: health, job loss, urgent repairs',
+                  ]),
+                  callout(
+                    'Example',
+                    'If essentials cost ₹20,000 a month, a starter target is ₹60,000. Saving ₹5,000 a month reaches it in a year.',
+                  ),
+                  recap([
+                    'One month of essentials',
+                    '3–6 months',
+                    'Automate',
+                    'Define emergencies',
+                  ]),
+                ],
+              },
+              {
+                slug: 'insurance-basics',
+                title: 'Insurance Basics',
+                summary: 'Understand what health and term insurance are for.',
+                objective: 'Explain the purpose of health insurance and term life insurance.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Insurance transfers a risk you cannot absorb'),
+                  paragraph(
+                    'Insurance is not an investment. It protects you from a large, unlikely expense that would damage your finances.',
+                  ),
+                  bulletList([
+                    'Health insurance covers hospital and medical costs',
+                    'Term life insurance pays your family if you die during the policy',
+                    'Check the sum insured, waiting periods and exclusions',
+                    'Disclose health and habits honestly or a claim can be rejected',
+                  ]),
+                  callout(
+                    'Educational only',
+                    'Product features and premiums vary. Compare official policy documents and consult a qualified adviser before buying.',
+                  ),
+                  recap(['Health cover', 'Term cover', 'Read exclusions', 'Disclose honestly']),
+                ],
+              },
+              {
+                slug: 'avoiding-loan-traps',
+                title: 'Avoiding Loan Traps',
+                summary: 'Spot the real cost behind a low monthly payment.',
+                objective: 'Compare loans using total cost, not only the EMI.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                requiresQuiz: true,
+                blocks: [
+                  heading('The EMI hides the price'),
+                  paragraph(
+                    'A small monthly payment can hide a long tenure and a high total interest cost. Always compare the total amount repaid, not only the EMI.',
+                  ),
+                  bulletList([
+                    'Check the annual interest rate, not just the processing fee',
+                    'Ask for the total repayment amount over the full tenure',
+                    'Watch for prepayment penalties and hidden charges',
+                    'Avoid loans with unclear terms or pressure to sign quickly',
+                  ]),
+                  callout(
+                    'Red flag',
+                    'A lender who will not give you the full cost in writing is not offering a good deal.',
+                  ),
+                  callout(
+                    'Hinglish tip',
+                    'EMI kam lag sakta hai, lekin total interest zyada ho sakta hai. Poora calculation maangiye.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap(['Annual rate', 'Total repayment', 'Hidden charges', 'Get it in writing']),
+                ],
+                quiz: {
+                  slug: 'quiz-avoiding-loan-traps',
+                  title: 'Loan cost check',
+                  xpReward: 5,
+                  questions: [
+                    {
+                      type: QuestionType.SINGLE_CHOICE,
+                      prompt: 'Which number best shows the real cost of a loan?',
+                      explanation:
+                        'The total repayment includes interest and fees across the full tenure.',
+                      options: [
+                        { text: 'The EMI only' },
+                        { text: 'The processing fee only' },
+                        { text: 'The total amount repaid over the full tenure', isCorrect: true },
+                        { text: 'The first payment' },
+                      ],
+                    },
+                    {
+                      type: QuestionType.TRUE_FALSE,
+                      prompt: 'A lower EMI always means a cheaper loan.',
+                      explanation:
+                        'A lower EMI can come from a longer tenure, which often increases total interest.',
+                      options: [{ text: 'True' }, { text: 'False', isCorrect: true }],
+                    },
+                  ],
+                },
+              },
+              {
+                slug: 'first-investment-steps',
+                title: 'First Investment Steps',
+                summary: 'Learn the order of operations before choosing a product.',
+                objective: 'Place emergency fund, insurance and investing in a sensible order.',
+                estimatedMinutes: 5,
+                accessTier: AccessTier.PREMIUM,
+                blocks: [
+                  heading('Protect first, invest later'),
+                  paragraph(
+                    'Investing makes sense after expensive debt is under control and a safety net exists. The right product matters less than the right order.',
+                  ),
+                  bulletList([
+                    'Pay down high-interest debt',
+                    'Build an emergency fund',
+                    'Get basic health and term cover',
+                    'Invest regularly for long-term goals',
+                    'Keep short-term money in low-risk options',
+                  ]),
+                  callout(
+                    'Educational only',
+                    'This lesson does not recommend a specific product. Returns are not guaranteed, and investments can lose value.',
+                  ),
+                  callout(
+                    'Hinglish tip',
+                    'Pehle safety net, phir investment. “Guaranteed high return” sunte hi sawdhan ho jaiye.',
+                    ContentLanguage.HINGLISH,
+                  ),
+                  recap([
+                    'Clear expensive debt',
+                    'Emergency fund',
+                    'Insurance',
+                    'Long-term investing',
+                    'No guarantees',
+                  ]),
                 ],
               },
             ],

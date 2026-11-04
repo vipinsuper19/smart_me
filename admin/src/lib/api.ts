@@ -5,7 +5,7 @@ const SESSION_STORAGE_KEY = 'smartme.admin.session';
 const SESSION_EVENT = 'smartme:admin-session';
 
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL;
+  return (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL).replace(/\/+$/, '');
 }
 
 interface ApiErrorBody {

@@ -853,13 +853,7 @@ export class ContentService {
 
       return {
         item: {
-          lesson: this.toLessonCard(
-            lesson,
-            lesson.module,
-            courseRef,
-            progress,
-            hasPremiumAccess,
-          ),
+          lesson: this.toLessonCard(lesson, lesson.module, courseRef, progress, hasPremiumAccess),
           learningPath: lesson.module.course.learningPath,
           progress: toLessonProgressView(row),
         },

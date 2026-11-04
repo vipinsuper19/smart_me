@@ -18,6 +18,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "content:verify": "tsx scripts/verify-content.ts",
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate",
     "predev": "prisma generate",

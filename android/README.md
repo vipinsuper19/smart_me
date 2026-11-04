@@ -63,6 +63,32 @@ API 36 `google_apis` x86_64 emulator on GitHub-hosted Linux, using `/dev/kvm`
 for hardware acceleration, and uploads the HTML report and test results as an
 artifact. It also has a manual `workflow_dispatch` trigger.
 
+### Release builds
+
+Release versioning, API URL and signing are configurable per build:
+
+```powershell
+.\gradlew.bat :app:assembleRelease :app:bundleRelease `
+  -PSMARTME_VERSION_CODE=42 `
+  -PSMARTME_VERSION_NAME=1.0.0 `
+  -PSMARTME_RELEASE_API_BASE_URL=https://api.smartme.app/api/v1/
+```
+
+Signing is enabled when all four properties are present:
+`SMARTME_RELEASE_STORE_FILE`, `SMARTME_RELEASE_STORE_PASSWORD`,
+`SMARTME_RELEASE_KEY_ALIAS` and `SMARTME_RELEASE_KEY_PASSWORD`. Without them the
+release APK/AAB is unsigned, which is useful for CI dry runs but cannot be
+uploaded to Play.
+
+`.github/workflows/release.yml` is a manual workflow that runs the quality gates,
+verifies seeded content, builds the release artifacts and uploads them. Add the
+`SMARTME_KEYSTORE_BASE64`, `SMARTME_RELEASE_STORE_PASSWORD`,
+`SMARTME_RELEASE_KEY_ALIAS` and `SMARTME_RELEASE_KEY_PASSWORD` repository
+secrets to produce a signed AAB. R8/minification stays off until the Retrofit,
+kotlinx.serialization and Hilt rules have been validated against a real release
+build. See [the release runbook](../docs/RELEASE-RUNBOOK.md) for the Play Console
+steps.
+
 ## Compose previews
 
 Every screen ships `@Preview` coverage so layout work does not need a device,
@@ -89,7 +115,7 @@ emulator or backend.
 | Build type | Value |
 |---|---|
 | `debug` | `http://10.0.2.2:3001/api/v1/` (emulator loopback to the host) |
-| `release` | `https://api.smartme.app/api/v1/` (placeholder until deployed) |
+| `release` | `https://api.smartme.app/api/v1/` by default; override with `-PSMARTME_RELEASE_API_BASE_URL=...` |
 
 The debug URL can be overridden for a physical device. Run the backend on the
 host, forward the port over USB, and pass the property at build time:

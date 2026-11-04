@@ -9,6 +9,8 @@ export interface ApiErrorBody {
   code: string;
   message: string;
   details?: ApiErrorDetail[];
+  /** Correlates this response with server logs and the x-request-id header. */
+  requestId?: string;
 }
 
 /**

@@ -10,13 +10,17 @@ interface MockHost {
   json: jest.Mock;
 }
 
-function mockHost(): MockHost {
+function mockHost(requestId?: string): MockHost {
   const json = jest.fn();
   const status = jest.fn().mockReturnValue({ json });
   const host = {
     switchToHttp: () => ({
       getResponse: () => ({ status, json }),
-      getRequest: () => ({ method: 'POST', originalUrl: '/api/v1/auth/login' }),
+      getRequest: () => ({
+        method: 'POST',
+        originalUrl: '/api/v1/auth/login',
+        ...(requestId ? { requestId } : {}),
+      }),
     }),
   } as unknown as ArgumentsHost;
 
@@ -82,5 +86,19 @@ describe('ApiExceptionFilter', () => {
       },
     });
     expect(JSON.stringify(json.mock.calls[0][0])).not.toContain('hunter2');
+  });
+
+  it('includes the request ID in the error envelope for support', () => {
+    const { host, json } = mockHost('req-12345678');
+
+    filter.catch(new ApiException('NOT_FOUND', 'The requested resource was not found.', 404), host);
+
+    expect(json).toHaveBeenCalledWith({
+      error: {
+        code: 'NOT_FOUND',
+        message: 'The requested resource was not found.',
+        requestId: 'req-12345678',
+      },
+    });
   });
 });

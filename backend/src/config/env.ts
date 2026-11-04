@@ -40,6 +40,14 @@ export const envSchema = z
       .default('false')
       .transform((value) => value === 'true'),
 
+    /** Set false only when another layer already logs every request. */
+    LOG_HTTP_REQUESTS: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
+    /** Successful requests at or above this duration are logged as warnings. */
+    LOG_SLOW_REQUEST_MS: z.coerce.number().int().min(50).max(60_000).default(1_000),
+
     DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
 

@@ -62,6 +62,9 @@ jobs:
       - name: Seed database
         run: pnpm db:seed
 
+      - name: Verify published content
+        run: pnpm --filter @smartme/backend content:verify
+
       - name: Lint
         run: pnpm lint
 
