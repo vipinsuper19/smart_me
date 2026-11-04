@@ -42,15 +42,17 @@ export class TokenService {
   async issueAccessToken(userId: string, sessionId: string): Promise<IssuedAccessToken> {
     const now = new Date();
     const expiresAt = addSeconds(now, this.accessTtlSeconds);
-    const token = await this.jwt.signAsync({
-      sub: userId,
-      sid: sessionId,
-      typ: 'access',
-      // Without an explicit `exp` the token is valid for as long as its
-      // signature verifies, which silently turns a "15 minute" access token
-      // into a session-lifetime credential.
-      expiresIn: this.accessTtlSeconds,
-    });
+    // `expiresIn` must be a sign *option*: inside the payload it becomes an
+    // inert claim and the token is issued without an `exp`, which silently
+    // turns a "15 minute" access token into a session-lifetime credential.
+    const token = await this.jwt.signAsync(
+      {
+        sub: userId,
+        sid: sessionId,
+        typ: 'access',
+      },
+      { expiresIn: this.accessTtlSeconds },
+    );
 
     return { token, expiresAt };
   }
@@ -85,12 +87,14 @@ export class TokenService {
   async issueAdminAccessToken(adminUserId: string, sessionId: string): Promise<IssuedAccessToken> {
     const now = new Date();
     const expiresAt = addSeconds(now, this.accessTtlSeconds);
-    const token = await this.jwt.signAsync({
-      sub: adminUserId,
-      sid: sessionId,
-      typ: 'admin_access',
-      expiresIn: this.accessTtlSeconds,
-    });
+    const token = await this.jwt.signAsync(
+      {
+        sub: adminUserId,
+        sid: sessionId,
+        typ: 'admin_access',
+      },
+      { expiresIn: this.accessTtlSeconds },
+    );
 
     return { token, expiresAt };
   }
