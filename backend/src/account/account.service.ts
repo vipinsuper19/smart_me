@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { AccountDeletionRequest } from '../generated/prisma/client';
-import { DeletionRequestStatus, SessionRevocationReason } from '../generated/prisma/enums';
+import type { AccountDeletionRequest, Prisma } from '../generated/prisma/client';
+import {
+  DeletionRequestStatus,
+  SessionRevocationReason,
+  UserStatus,
+} from '../generated/prisma/enums';
 import { ApiException } from '../common/errors/api-error';
 import { isPrismaErrorWithCode } from '../common/prisma/prisma-errors';
 import { addDays } from '../common/utils/duration';
@@ -71,6 +75,54 @@ export class AccountService {
     }
   }
 
+  /**
+   * Executes every deletion request whose grace period has elapsed.
+   *
+   * Each request is claimed inside a transaction before any data is touched, so
+   * overlapping scheduler ticks or multiple API instances cannot process the
+   * same learner twice. The learner row is anonymised rather than hard-deleted:
+   * billing and audit records that legally must be retained keep a stable
+   * foreign key, while every direct identifier is removed.
+   */
+  async processDueDeletions(now = new Date()): Promise<number> {
+    const due = await this.prisma.accountDeletionRequest.findMany({
+      where: {
+        status: DeletionRequestStatus.PENDING,
+        scheduledFor: { lte: now },
+      },
+      orderBy: { scheduledFor: 'asc' },
+      take: 100,
+      select: { id: true, userId: true },
+    });
+
+    let completed = 0;
+
+    for (const request of due) {
+      const didComplete = await this.prisma.$transaction(async (tx) => {
+        const claimed = await tx.accountDeletionRequest.updateMany({
+          where: { id: request.id, status: DeletionRequestStatus.PENDING },
+          data: {
+            status: DeletionRequestStatus.COMPLETED,
+            completedAt: now,
+          },
+        });
+
+        if (claimed.count !== 1) {
+          return false;
+        }
+
+        await this.scrubUser(tx, request.userId, now);
+        return true;
+      });
+
+      if (didComplete) {
+        completed += 1;
+      }
+    }
+
+    return completed;
+  }
+
   async getStatus(userId: string): Promise<DeletionRequestView | null> {
     const request = await this.prisma.accountDeletionRequest.findFirst({
       where: { userId },
@@ -126,6 +178,58 @@ export class AccountService {
       data: {
         revokedAt: new Date(),
         revokedReason: SessionRevocationReason.ACCOUNT_DELETED,
+      },
+    });
+  }
+
+  /**
+   * Removes direct identifiers while keeping the row and its legal/financial
+   * relations intact. The unique email is replaced with a tombstone so the
+   * original address can be registered again.
+   */
+  private async scrubUser(tx: Prisma.TransactionClient, userId: string, now: Date): Promise<void> {
+    await tx.session.updateMany({
+      where: { userId, revokedAt: null },
+      data: {
+        revokedAt: now,
+        revokedReason: SessionRevocationReason.ACCOUNT_DELETED,
+      },
+    });
+
+    await tx.deviceToken.updateMany({
+      where: { userId, isActive: true },
+      data: { isActive: false },
+    });
+
+    await tx.userIdentity.deleteMany({ where: { userId } });
+
+    await tx.userProfile.updateMany({
+      where: { userId },
+      data: {
+        headline: null,
+        occupation: null,
+        city: null,
+        bio: null,
+        dateOfBirth: null,
+      },
+    });
+
+    await tx.userPreference.updateMany({
+      where: { userId },
+      data: { interests: [] },
+    });
+
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        status: UserStatus.DELETED,
+        email: `deleted-${userId}@deleted.invalid`,
+        emailVerifiedAt: null,
+        passwordHash: null,
+        name: null,
+        avatarUrl: null,
+        onboardingCompletedAt: null,
+        lastActiveAt: null,
       },
     });
   }

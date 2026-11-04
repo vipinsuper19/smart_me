@@ -882,6 +882,9 @@ export class ContentService {
           },
         },
       },
+      // The launch library is small, but an unbounded query would grow with
+      // future content. Preferences are scored over this bounded window.
+      take: 500,
       select: {
         id: true,
         slug: true,

@@ -14,6 +14,7 @@ import {
   AuthProvider,
   DeletionRequestStatus,
   SessionRevocationReason,
+  UserStatus,
 } from '../generated/prisma/enums';
 import { ApiException } from '../common/errors/api-error';
 import { AuthenticatedRequest } from '../common/auth/authenticated-request';
@@ -131,6 +132,11 @@ describeIfDatabase('Auth and account integration', () => {
     expect(registration.tokens.tokenType).toBe('Bearer');
     expect(registration.tokens.accessToken).toBeTruthy();
     expect(registration.tokens.refreshToken).toMatch(/^rt_/);
+
+    // The access token must expire on its own instead of relying solely on the
+    // session row, which is rotated far less often.
+    const accessPayload = jwt.verify<{ exp: number; iat: number }>(registration.tokens.accessToken);
+    expect(accessPayload.exp - accessPayload.iat).toBe(baseConfig.JWT_ACCESS_TTL);
 
     const profile = await prisma.userProfile.findUnique({
       where: { userId: registration.user.id },
@@ -322,6 +328,37 @@ describeIfDatabase('Auth and account integration', () => {
     await expectApiError(account.cancel(registration.user.id), 'NO_PENDING_DELETION_REQUEST', 404);
   });
 
+  it('anonymises a learner once the deletion grace period elapses', async () => {
+    const email = testEmail();
+    const registration = await auth.register(registerDto(email), {});
+    const request = await account.requestDeletion(registration.user.id, 'integration test');
+
+    await prisma.accountDeletionRequest.update({
+      where: { id: request.id },
+      data: { scheduledFor: new Date(Date.now() - 1_000) },
+    });
+
+    const completed = await account.processDueDeletions();
+    expect(completed).toBeGreaterThanOrEqual(1);
+
+    const user = await prisma.user.findUnique({ where: { id: registration.user.id } });
+    expect(user?.status).toBe(UserStatus.DELETED);
+    expect(user?.email).not.toBe(email);
+    expect(user?.passwordHash).toBeNull();
+    expect(await prisma.userIdentity.count({ where: { userId: registration.user.id } })).toBe(0);
+
+    const stored = await prisma.accountDeletionRequest.findUnique({ where: { id: request.id } });
+    expect(stored?.status).toBe(DeletionRequestStatus.COMPLETED);
+    expect(stored?.completedAt).toBeTruthy();
+
+    // The original address is free again.
+    const reRegistered = await auth.register(registerDto(email), {});
+    expect(reRegistered.user.email).toBe(email);
+
+    await prisma.user.delete({ where: { id: registration.user.id } });
+    await prisma.user.delete({ where: { id: reRegistered.user.id } });
+  });
+
   it('rejects Google sign-in when the feature is disabled', async () => {
     await expectApiError(
       auth.googleLogin({ idToken: 'x'.repeat(40) }, {}),
@@ -358,9 +395,36 @@ describeIfDatabase('Auth and account integration', () => {
     expect(second.user.id).toBe(first.user.id);
   });
 
-  it('links Google to an existing email account with a verified Google email', async () => {
+  it('refuses to auto-link Google to an unverified email account', async () => {
     const email = testEmail();
     const registration = await auth.register(registerDto(email), {});
+    (googleVerifier.verify as jest.Mock).mockResolvedValue({
+      providerUserId: `google-${randomUUID()}`,
+      email,
+      emailVerified: true,
+      name: 'Linked Learner',
+    });
+
+    await expectApiError(
+      googleAuth.googleLogin({ idToken: 'x'.repeat(40) }, {}),
+      'ACCOUNT_EXISTS_USE_PASSWORD',
+      409,
+    );
+
+    // The pre-existing password credential must remain the only way in, so an
+    // attacker who pre-registered the address cannot ride the Google sign-in.
+    const login = await auth.login({ email, password: 'Password123' }, {});
+    expect(login.user.id).toBe(registration.user.id);
+    expect(login.user.authProviders).toEqual([AuthProvider.EMAIL]);
+  });
+
+  it('links Google to an existing email account once the email is verified', async () => {
+    const email = testEmail();
+    const registration = await auth.register(registerDto(email), {});
+    await prisma.user.update({
+      where: { id: registration.user.id },
+      data: { emailVerifiedAt: new Date() },
+    });
     (googleVerifier.verify as jest.Mock).mockResolvedValue({
       providerUserId: `google-${randomUUID()}`,
       email,

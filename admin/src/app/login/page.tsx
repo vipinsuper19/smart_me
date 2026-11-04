@@ -6,6 +6,23 @@ import { errorMessage } from '@/lib/api';
 import { useAdminAuth } from '@/lib/auth';
 import { Alert, Button, Field, Input, Spinner } from '@/components/ui';
 
+/**
+ * Only same-origin relative paths are honoured, so a crafted `?next=//evil`
+ * cannot turn the admin login into an open redirect.
+ */
+function postLoginPath(): string {
+  if (typeof window === 'undefined') {
+    return '/dashboard';
+  }
+
+  const next = new URLSearchParams(window.location.search).get('next');
+  if (!next || !next.startsWith('/') || next.startsWith('//')) {
+    return '/dashboard';
+  }
+
+  return next;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { login, session, loading } = useAdminAuth();
@@ -16,7 +33,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && session) {
-      router.replace('/dashboard');
+      router.replace(postLoginPath());
     }
   }, [loading, router, session]);
 
@@ -26,7 +43,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(email.trim(), password);
-      router.replace('/dashboard');
+      router.replace(postLoginPath());
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {

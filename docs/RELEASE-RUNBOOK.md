@@ -18,8 +18,8 @@ Collect these before starting:
 |---|---|---|
 | Commit SHA | `git rev-parse HEAD` | Must match the CI run that passed |
 | Release workflow run | GitHub Actions → Release | `.github/workflows/release.yml` |
-| Backend bundle | Release artifact `smartme-backend-<version>` | Contains `dist`, `prisma`, `package.json` |
-| Admin bundle | Release artifact `smartme-admin-<version>` | Contains `.next`, `package.json`, config |
+| Backend bundle | Release artifact `smartme-backend-<version>` | Self-contained: `dist`, `prisma`, `package.json`, production `node_modules` |
+| Admin bundle | Release artifact `smartme-admin-<version>` | Self-contained: `.next`, `package.json`, config, production `node_modules` |
 | Android APK/AAB | Release artifacts | AAB uploads to Play; APK for smoke tests |
 | Version name/code | Release workflow inputs | Version code must increase for every Play upload |
 | API base URL | Release workflow input | Must include `/api/v1/` and use HTTPS |
@@ -63,6 +63,8 @@ stops the process instead of failing later.
 | `GOOGLE_CLIENT_ID` | Web OAuth client ID | Must match the Android build value |
 | `TERMS_VERSION` | Published policy version | Change when the terms change |
 | `ACCOUNT_DELETION_GRACE_DAYS` | `30` | Cancellation window before deletion |
+| `ACCOUNT_DELETION_SCHEDULER_ENABLED` | `true` on one instance | Executes due deletion requests; disable when an external job owns them |
+| `ACCOUNT_DELETION_INTERVAL_SECONDS` | `3600` | Deletion processor tick |
 
 ### 2.3 Billing and notifications
 
@@ -172,14 +174,23 @@ admin; this is what lets the team ship lessons without an app release.
 
 ## 5. Deploy the backend
 
-The release artifact contains `dist`, `prisma` and `package.json`. Install
-production dependencies in the runtime image or host, generate the Prisma client
-once for the target platform, then start the process.
+The release artifact is produced with `pnpm deploy`, so it already contains
+`dist`, `prisma`, `package.json` and a production-only `node_modules` directory
+(including the generated Prisma client). Do not run a plain `pnpm install`
+inside the bundle: `postinstall` runs `prisma generate`, but `prisma` is a
+devDependency and is intentionally absent.
 
 ```bash
 # In the unpacked backend bundle
-pnpm install --prod
 node dist/main.js
+```
+
+If dependencies must be reinstalled for a different platform, reinstall with
+scripts disabled and regenerate the client with the matching Prisma CLI outside
+the production bundle:
+
+```bash
+pnpm install --prod --ignore-scripts --no-frozen-lockfile
 ```
 
 Operational requirements:
@@ -225,8 +236,7 @@ customer account for smoke tests.
 ## 6. Deploy the admin panel
 
 ```bash
-# In the unpacked admin bundle
-pnpm install --prod
+# In the unpacked admin bundle (production node_modules are included)
 pnpm start
 ```
 

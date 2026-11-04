@@ -329,11 +329,21 @@ export class BillingService {
       const result = await this.processNotification(notification);
       await this.prisma.billingEvent.update({
         where: { id: event.id },
-        data: {
-          processedAt: new Date(),
-          processingError: result.error ?? null,
-          subscriptionId: result.subscriptionId ?? event.subscriptionId,
-        },
+        data: result.processed
+          ? {
+              processedAt: new Date(),
+              processingError: null,
+              subscriptionId: result.subscriptionId ?? event.subscriptionId,
+              nextRetryAt: null,
+            }
+          : {
+              // Leaving `processedAt` null keeps the event eligible when Pub/Sub
+              // redelivers it or a retry job runs. Marking it processed here
+              // would permanently drop an event we could not attribute yet.
+              processingError: result.error ?? 'NOT_PROCESSED',
+              subscriptionId: result.subscriptionId ?? event.subscriptionId,
+              nextRetryAt: new Date(Date.now() + 5 * 60_000),
+            },
       });
       return { received: true, duplicate: false, processed: result.processed };
     } catch (error) {

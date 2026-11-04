@@ -39,6 +39,8 @@ pg_restore \
   --if-exists \
   --no-owner \
   --no-privileges \
+  --single-transaction \
+  --exit-on-error \
   --dbname="$DATABASE_URL" \
   "$DUMP_FILE"
 

@@ -56,6 +56,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
 import com.smartme.app.R
 import com.smartme.app.core.designsystem.theme.Spacing
@@ -496,11 +499,21 @@ private fun VideoBlock(block: LessonBlockDto, modifier: Modifier = Modifier) {
     }
 
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var failed by remember(url) { mutableStateOf(false) }
     val videoView = remember { mutableStateOf<VideoView?>(null) }
 
-    DisposableEffect(url) {
-        onDispose { videoView.value?.stopPlayback() }
+    DisposableEffect(url, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                runCatching { videoView.value?.pause() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            videoView.value?.stopPlayback()
+        }
     }
 
     Column(
@@ -662,8 +675,19 @@ internal fun formatTime(milliseconds: Int): String {
 @Composable
 private fun rememberAudioController(url: String?): AudioController {
     val controller = remember(url) { AudioController(url) }
-    DisposableEffect(controller) {
-        onDispose { controller.release() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            // Never keep speaking after the screen is backgrounded.
+            if (event == Lifecycle.Event.ON_STOP) {
+                controller.pause()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.release()
+        }
     }
     LaunchedEffect(controller.isPlaying) {
         while (controller.isPlaying) {
@@ -732,6 +756,19 @@ private class AudioController(private val url: String?) {
         }
     }
 
+    /** Pauses without losing the position; used when the screen is backgrounded. */
+    fun pause() {
+        try {
+            if (player?.isPlaying == true) {
+                player?.pause()
+            }
+        } catch (_: IllegalStateException) {
+            error = true
+        } finally {
+            isPlaying = false
+        }
+    }
+
     fun stop() {
         val current = player ?: return
         try {
@@ -781,8 +818,8 @@ private class AudioController(private val url: String?) {
         player.setOnPreparedListener { prepared ->
             isPrepared = true
             durationMs = prepared.duration.coerceAtLeast(0)
-            prepared.start()
-            isPlaying = true
+            // Playback is always an explicit user action; preparing a block
+            // must not start audio as soon as it scrolls into view.
         }
         player.setOnCompletionListener { completed ->
             isPlaying = false

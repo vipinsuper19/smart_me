@@ -18,6 +18,7 @@ export class AdminOverviewController {
   constructor(private readonly overview: AdminOverviewService) {}
 
   @Get('dashboard')
+  @AdminRoles(...BUSINESS_READ)
   dashboard() {
     return this.overview.dashboard();
   }

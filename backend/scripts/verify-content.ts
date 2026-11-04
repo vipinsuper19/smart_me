@@ -92,19 +92,84 @@ async function main(): Promise<void> {
     }),
     Promise.all([
       prisma.learningPath.count({ where: { status: PublicationStatus.PUBLISHED } }),
-      prisma.course.count({ where: { status: PublicationStatus.PUBLISHED } }),
-      prisma.courseModule.count({
-        where: { course: { status: PublicationStatus.PUBLISHED } },
+      prisma.course.count({
+        where: {
+          status: PublicationStatus.PUBLISHED,
+          learningPath: { status: PublicationStatus.PUBLISHED },
+        },
       }),
-      prisma.lesson.count({ where: { status: PublicationStatus.PUBLISHED } }),
-      prisma.quiz.count({ where: { status: PublicationStatus.PUBLISHED } }),
+      prisma.courseModule.count({
+        where: {
+          course: {
+            status: PublicationStatus.PUBLISHED,
+            learningPath: { status: PublicationStatus.PUBLISHED },
+          },
+        },
+      }),
+      prisma.lesson.count({
+        where: {
+          status: PublicationStatus.PUBLISHED,
+          module: {
+            course: {
+              status: PublicationStatus.PUBLISHED,
+              learningPath: { status: PublicationStatus.PUBLISHED },
+            },
+          },
+        },
+      }),
+      prisma.quiz.count({
+        where: {
+          status: PublicationStatus.PUBLISHED,
+          OR: [
+            // Standalone quizzes (for example the daily challenge) have no lesson.
+            { lessonId: null },
+            {
+              lesson: {
+                status: PublicationStatus.PUBLISHED,
+                module: {
+                  course: {
+                    status: PublicationStatus.PUBLISHED,
+                    learningPath: { status: PublicationStatus.PUBLISHED },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      }),
       prisma.question.count({
-        where: { quiz: { status: PublicationStatus.PUBLISHED } },
+        where: {
+          quiz: {
+            status: PublicationStatus.PUBLISHED,
+            OR: [
+              { lessonId: null },
+              {
+                lesson: {
+                  status: PublicationStatus.PUBLISHED,
+                  module: {
+                    course: {
+                      status: PublicationStatus.PUBLISHED,
+                      learningPath: { status: PublicationStatus.PUBLISHED },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
       }),
       prisma.lessonContentBlock.count({
         where: {
           type: ContentBlockType.EXAMPLE_CONVERSATION,
-          lesson: { status: PublicationStatus.PUBLISHED },
+          lesson: {
+            status: PublicationStatus.PUBLISHED,
+            module: {
+              course: {
+                status: PublicationStatus.PUBLISHED,
+                learningPath: { status: PublicationStatus.PUBLISHED },
+              },
+            },
+          },
         },
       }),
     ]),
@@ -263,6 +328,44 @@ async function main(): Promise<void> {
   });
   if (hiddenCourses > 0) {
     error(`${hiddenCourses} published course(s) belong to an unpublished learning path.`);
+  }
+
+  const hiddenLessons = await prisma.lesson.count({
+    where: {
+      status: PublicationStatus.PUBLISHED,
+      OR: [
+        { module: { course: { status: { not: PublicationStatus.PUBLISHED } } } },
+        {
+          module: {
+            course: { learningPath: { status: { not: PublicationStatus.PUBLISHED } } },
+          },
+        },
+      ],
+    },
+  });
+  if (hiddenLessons > 0) {
+    error(`${hiddenLessons} published lesson(s) belong to an unpublished course or path.`);
+  }
+
+  const hiddenQuizzes = await prisma.quiz.count({
+    where: {
+      status: PublicationStatus.PUBLISHED,
+      lessonId: { not: null },
+      OR: [
+        { lesson: { status: { not: PublicationStatus.PUBLISHED } } },
+        { lesson: { module: { course: { status: { not: PublicationStatus.PUBLISHED } } } } },
+        {
+          lesson: {
+            module: {
+              course: { learningPath: { status: { not: PublicationStatus.PUBLISHED } } },
+            },
+          },
+        },
+      ],
+    },
+  });
+  if (hiddenQuizzes > 0) {
+    error(`${hiddenQuizzes} published quiz(zes) belong to an unpublished lesson, course or path.`);
   }
 
   if (premiumLessonCount === 0) {

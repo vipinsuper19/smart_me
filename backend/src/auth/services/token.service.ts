@@ -46,6 +46,10 @@ export class TokenService {
       sub: userId,
       sid: sessionId,
       typ: 'access',
+      // Without an explicit `exp` the token is valid for as long as its
+      // signature verifies, which silently turns a "15 minute" access token
+      // into a session-lifetime credential.
+      expiresIn: this.accessTtlSeconds,
     });
 
     return { token, expiresAt };
@@ -85,6 +89,7 @@ export class TokenService {
       sub: adminUserId,
       sid: sessionId,
       typ: 'admin_access',
+      expiresIn: this.accessTtlSeconds,
     });
 
     return { token, expiresAt };

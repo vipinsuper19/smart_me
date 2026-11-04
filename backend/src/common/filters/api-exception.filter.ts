@@ -82,7 +82,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (status >= 500) {
       const stack = exception instanceof Error ? exception.stack : String(exception);
       this.logger.error(
-        `${request.method} ${request.originalUrl} -> ${status} ${body.code} requestId=${requestId ?? '-'}`,
+        `${request.method} ${request.path} -> ${status} ${body.code} requestId=${requestId ?? '-'}`,
         stack,
       );
     }

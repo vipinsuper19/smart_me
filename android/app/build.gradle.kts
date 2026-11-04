@@ -23,6 +23,13 @@ android {
         ?.takeIf { it.isNotBlank() }
         ?: "0.1.0"
 
+    require(appVersionCode > 0) {
+        "SMARTME_VERSION_CODE must be a positive integer (got $appVersionCode)."
+    }
+    require(Regex("""^\d+\.\d+\.\d+([.-][0-9A-Za-z.-]+)?$""").matches(appVersionName)) {
+        "SMARTME_VERSION_NAME must look like 1.2.3 (got \"$appVersionName\")."
+    }
+
     defaultConfig {
         applicationId = "com.smartme.app"
         minSdk = 29
@@ -48,6 +55,19 @@ android {
         val storePassword = providers.gradleProperty("SMARTME_RELEASE_STORE_PASSWORD").orNull
         val keyAlias = providers.gradleProperty("SMARTME_RELEASE_KEY_ALIAS").orNull
         val keyPassword = providers.gradleProperty("SMARTME_RELEASE_KEY_PASSWORD").orNull
+
+        val provided = listOf(storeFile, storePassword, keyAlias, keyPassword)
+            .count { !it.isNullOrBlank() }
+        // Silently falling back to an unsigned build when only some secrets are
+        // present produces an artifact that looks releasable but cannot be
+        // installed or uploaded. Fail loudly instead.
+        if (provided in 1..3) {
+            throw GradleException(
+                "Release signing requires SMARTME_RELEASE_STORE_FILE, " +
+                    "SMARTME_RELEASE_STORE_PASSWORD, SMARTME_RELEASE_KEY_ALIAS and " +
+                    "SMARTME_RELEASE_KEY_PASSWORD together; only $provided of 4 were provided.",
+            )
+        }
 
         if (!storeFile.isNullOrBlank() && !storePassword.isNullOrBlank() &&
             !keyAlias.isNullOrBlank() && !keyPassword.isNullOrBlank()
@@ -77,6 +97,9 @@ android {
                 .get()
             val releaseApiBaseUrl =
                 if (configuredBaseUrl.endsWith("/")) configuredBaseUrl else "$configuredBaseUrl/"
+            require(releaseApiBaseUrl.startsWith("https://")) {
+                "SMARTME_RELEASE_API_BASE_URL must use https (got \"$releaseApiBaseUrl\")."
+            }
             buildConfigField("String", "API_BASE_URL", "\"$releaseApiBaseUrl\"")
 
             val releaseSigning = signingConfigs.findByName("release")

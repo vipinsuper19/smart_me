@@ -56,6 +56,8 @@ class SubscriptionViewModel @Inject constructor(
     val events = eventChannel.receiveAsFlow()
 
     private var hasResumedOnce = false
+    private var reconciledOnce = false
+    private var reconcileOnResume = false
 
     init {
         load()
@@ -67,6 +69,9 @@ class SubscriptionViewModel @Inject constructor(
             return
         }
         load(showLoading = false)
+        if (reconcileOnResume) {
+            viewModelScope.launch { reconcilePendingPurchases() }
+        }
     }
 
     fun load(showLoading: Boolean = true) {
@@ -106,6 +111,15 @@ class SubscriptionViewModel @Inject constructor(
                 me = meData,
                 selectedPlanId = selected,
             )
+
+            // A previous purchase may have completed in Play but failed backend
+            // verification (for example the network dropped at the worst
+            // moment). Reconcile silently once per process before the learner
+            // has to tap "Restore".
+            if (!reconciledOnce) {
+                reconciledOnce = true
+                reconcilePendingPurchases()
+            }
         }
     }
 
@@ -244,13 +258,13 @@ class SubscriptionViewModel @Inject constructor(
             }
 
             is ApiResult.Failure -> {
+                // Play has taken the money; a failed verification is a retryable
+                // server/network problem, not a failed purchase. Report it as
+                // pending and reconcile on the next resume instead of telling
+                // the learner the purchase failed.
+                reconcileOnResume = true
                 _state.value = _state.value.copy(busy = false)
-                eventChannel.send(
-                    SubscriptionEvent.PurchaseFailed(
-                        failure = null,
-                        serverMessage = result.error.message,
-                    ),
-                )
+                eventChannel.send(SubscriptionEvent.PurchasePending)
             }
         }
     }
@@ -259,6 +273,30 @@ class SubscriptionViewModel @Inject constructor(
         when (val me = repository.me()) {
             is ApiResult.Success -> _state.value = _state.value.copy(me = me.data)
             is ApiResult.Failure -> Unit
+        }
+    }
+
+    /**
+     * Re-sends every active Play purchase to the backend without surfacing
+     * dialogs. Safe to call repeatedly because restore is idempotent.
+     */
+    private suspend fun reconcilePendingPurchases() {
+        if (_state.value.me?.billingEnabled != true) return
+
+        val store = billing.restore()
+        if (store !is BillingRestoreOutcome.Success || store.purchases.isEmpty()) return
+
+        val result = repository.restore(
+            store.purchases.map {
+                RestorePurchaseEntryDto(
+                    productId = it.productId,
+                    purchaseToken = it.purchaseToken,
+                )
+            },
+        )
+        if (result is ApiResult.Success) {
+            reconcileOnResume = false
+            refreshEntitlement()
         }
     }
 }

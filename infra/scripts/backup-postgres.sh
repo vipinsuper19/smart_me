@@ -13,6 +13,10 @@
 #     ./infra/scripts/backup-postgres.sh
 set -euo pipefail
 
+# Dumps contain the whole database, including personal data. Create them
+# readable only by the backup user.
+umask 077
+
 : "${DATABASE_URL:?DATABASE_URL is required}"
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
 BACKUP_RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-30}"
@@ -35,6 +39,7 @@ pg_dump \
 
 # A custom-format dump is not a valid archive if the write was interrupted.
 pg_restore --list "$file" >/dev/null
+chmod 600 "$file"
 
 echo "$file"
 find "$BACKUP_DIR" -type f -name 'smartme-*.dump' -mtime +"$BACKUP_RETENTION_DAYS" -print -delete

@@ -40,6 +40,14 @@ android/.cxx/
 *.aab
 *.keystore
 !android/debug.keystore
+# Signing material must never be committed in any format.
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+keystore.properties
+signing.properties
 captures/
 
 # Testing / tooling

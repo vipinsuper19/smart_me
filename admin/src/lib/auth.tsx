@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  ApiError,
   apiFetch,
   clearAdminSession,
   readAdminSession,
@@ -65,8 +66,16 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         writeAdminSession(next);
         setSession(next);
       })
-      .catch(() => {
-        if (active) {
+      .catch((error: unknown) => {
+        if (!active) {
+          return;
+        }
+
+        // `apiFetch` already clears the session when a 401 cannot be refreshed.
+        // A transient network error must not sign the admin out of a session
+        // that is still valid; keep the stored session and let the next request
+        // retry.
+        if (error instanceof ApiError && error.status === 401) {
           clearAdminSession();
           setSession(null);
         }

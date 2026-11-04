@@ -36,6 +36,7 @@ import {
 interface QuizForAttempt {
   id: string;
   title: string;
+  status: PublicationStatus;
   passingScore: number;
   xpReward: number;
   timeLimitSeconds: number | null;
@@ -309,6 +310,9 @@ export class QuizService {
       }
 
       const attempt = await this.loadAttempt(tx, userId, attemptId);
+      if (attempt.quiz.status !== PublicationStatus.PUBLISHED) {
+        throw quizAttemptClosed();
+      }
       const question = await tx.question.findFirst({
         where: { id: dto.questionId, quizId: attempt.quizId },
         select: {
@@ -365,6 +369,9 @@ export class QuizService {
         };
       }
       if (attempt.status !== QuizAttemptStatus.IN_PROGRESS) {
+        throw quizAttemptClosed();
+      }
+      if (attempt.quiz.status !== PublicationStatus.PUBLISHED) {
         throw quizAttemptClosed();
       }
 
@@ -576,6 +583,7 @@ export class QuizService {
           select: {
             id: true,
             title: true,
+            status: true,
             passingScore: true,
             xpReward: true,
             timeLimitSeconds: true,

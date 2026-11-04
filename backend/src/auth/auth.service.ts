@@ -210,8 +210,21 @@ export class AuthService {
         );
       }
 
-      // Google has verified this email, so it is safe to link it to the
-      // existing account. Google is the authority for the email address.
+      // Never auto-link Google to an account whose email was never verified.
+      // Registration does not prove ownership of the address, so an attacker
+      // could pre-register a victim's email with a password and keep access
+      // after the victim signs in with Google. Requiring a verified email (or
+      // a future explicit linking flow) prevents that takeover path.
+      if (!existingUser.emailVerifiedAt) {
+        throw new ApiException(
+          'ACCOUNT_EXISTS_USE_PASSWORD',
+          'An account with this email already exists. Sign in with your password instead.',
+          409,
+        );
+      }
+
+      // Google has verified this email and the existing account owns it, so it
+      // is safe to link the identity.
       const user = await this.prisma.$transaction(async (tx) => {
         await tx.userIdentity.create({
           data: {
@@ -225,7 +238,6 @@ export class AuthService {
         return tx.user.update({
           where: { id: existingUser.id },
           data: {
-            emailVerifiedAt: existingUser.emailVerifiedAt ?? now,
             name: existingUser.name ?? identity.name ?? null,
             avatarUrl: existingUser.avatarUrl ?? identity.avatarUrl ?? null,
             lastActiveAt: now,

@@ -16,6 +16,9 @@ concurrency:
   group: android-device-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   instrumented:
     name: Instrumented UI tests (API 36 emulator)

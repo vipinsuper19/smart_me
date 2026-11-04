@@ -48,6 +48,7 @@ jobs:
       VERSION_CODE: ${{ inputs.version_code }}
       VERSION_NAME: ${{ inputs.version_name }}
       API_BASE_URL: ${{ inputs.api_base_url }}
+      STRICT_CONTENT: ${{ inputs.strict_content }}
       DATABASE_URL: postgresql://smartme:smartme@localhost:5432/smartme?schema=public
       APP_TIME_ZONE: Asia/Kolkata
       JWT_ACCESS_SECRET: release-only-access-secret-0000000000000
@@ -90,6 +91,35 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Validate release inputs
+        run: |
+          if ! [[ "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version_name: '$VERSION_NAME'. Expected a semantic version such as 1.2.3." >&2
+            exit 1
+          fi
+          if ! [[ "$VERSION_CODE" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "Invalid version_code: '$VERSION_CODE'. Expected a positive integer." >&2
+            exit 1
+          fi
+          if ! [[ "$API_BASE_URL" =~ ^https://[^[:space:]]+/api/v1/$ ]]; then
+            echo "Invalid api_base_url: '$API_BASE_URL'. Expected an https URL ending in /api/v1/." >&2
+            exit 1
+          fi
+
+      - name: Validate signing secrets
+        run: |
+          present=0
+          for value in "${KEYSTORE_BASE64:-}" "${STORE_PASSWORD:-}" "${KEY_ALIAS:-}" "${KEY_PASSWORD:-}"; do
+            if [ -n "$value" ]; then present=$((present + 1)); fi
+          done
+          if [ "$present" -ne 0 ] && [ "$present" -ne 4 ]; then
+            echo "Signing is all-or-none: set SMARTME_KEYSTORE_BASE64, SMARTME_RELEASE_STORE_PASSWORD, SMARTME_RELEASE_KEY_ALIAS and SMARTME_RELEASE_KEY_PASSWORD together." >&2
+            exit 1
+          fi
+          if [ "$present" -eq 0 ]; then
+            echo "No signing secrets configured; the APK/AAB will be unsigned and must not be uploaded to Play." >&2
+          fi
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -104,11 +134,14 @@ jobs:
 
       - name: Verify published content
         run: |
-          if [ "${{ inputs.strict_content }}" = "true" ]; then
+          if [ "$STRICT_CONTENT" = "true" ]; then
             pnpm --filter @smartme/backend content:verify -- --strict
           else
             pnpm --filter @smartme/backend content:verify
           fi
+
+      - name: Format check
+        run: pnpm format:check
 
       - name: Lint
         run: pnpm lint
@@ -124,12 +157,36 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ inputs.api_base_url }}
         run: pnpm build
 
-      - name: Package backend
+      - name: Package backend and admin
         run: |
-          tar -czf "$RUNNER_TEMP/smartme-backend-${{ inputs.version_name }}.tar.gz" \
-            -C backend dist package.json prisma prisma.config.ts tsconfig.json
-          tar -czf "$RUNNER_TEMP/smartme-admin-${{ inputs.version_name }}.tar.gz" \
-            -C admin .next package.json next.config.ts
+          set -euo pipefail
+          # `pnpm deploy` creates a self-contained directory with production
+          # node_modules and the built output, so the artifact does not need a
+          # fragile `pnpm install --prod` (which would run `prisma generate`
+          # without the `prisma` devDependency).
+          pnpm --filter @smartme/backend deploy --prod --ignore-scripts --legacy \
+            "$RUNNER_TEMP/backend-bundle"
+          pnpm --filter @smartme/admin deploy --prod --ignore-scripts --legacy \
+            "$RUNNER_TEMP/admin-bundle"
+
+          # Never ship local or CI secrets that happened to be present in the
+          # workspace package directory.
+          rm -f "$RUNNER_TEMP/backend-bundle/.env" "$RUNNER_TEMP"/backend-bundle/.env.*
+          rm -f "$RUNNER_TEMP/admin-bundle/.env" "$RUNNER_TEMP"/admin-bundle/.env.*
+
+          tar -czf "$RUNNER_TEMP/smartme-backend-$VERSION_NAME.tar.gz" \
+            -C "$RUNNER_TEMP/backend-bundle" .
+          tar -czf "$RUNNER_TEMP/smartme-admin-$VERSION_NAME.tar.gz" \
+            -C "$RUNNER_TEMP/admin-bundle" .
+
+      - name: Verify packaged bundles
+        run: |
+          set -euo pipefail
+          test -f "$RUNNER_TEMP/backend-bundle/dist/main.js"
+          test -d "$RUNNER_TEMP/backend-bundle/node_modules/@nestjs/core"
+          test -f "$RUNNER_TEMP/admin-bundle/.next/BUILD_ID"
+          test -d "$RUNNER_TEMP/admin-bundle/node_modules/next"
+          test ! -e "$RUNNER_TEMP/backend-bundle/.env"
 
       - name: Upload backend bundle
         uses: actions/upload-artifact@v4
@@ -179,6 +236,18 @@ jobs:
             "-PSMARTME_RELEASE_API_BASE_URL=$API_BASE_URL" \
             "${SIGNING_ARGS[@]}"
 
+      - name: Verify release signature
+        if: env.KEYSTORE_BASE64 != ''
+        working-directory: android
+        run: |
+          set -euo pipefail
+          apksigner="$(find "${ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          if [ -z "$apksigner" ]; then
+            echo "apksigner was not found in the Android SDK build-tools." >&2
+            exit 1
+          fi
+          "$apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
+
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
@@ -208,9 +277,13 @@ jobs:
 
       - name: Release summary
         run: |
-          echo "### SmartMe release ${{ inputs.version_name }} (${{ inputs.version_code }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "### SmartMe release $VERSION_NAME ($VERSION_CODE)" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- API: \`${{ inputs.api_base_url }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Signed: \`${{ env.KEYSTORE_BASE64 != '' }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API: \`$API_BASE_URL\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${KEYSTORE_BASE64:-}" ]; then
+            echo "- Signed: \`true\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Signed: \`false\` (unsigned artifact; do not upload to Play)" >> "$GITHUB_STEP_SUMMARY"
+          fi
           echo "- Artifacts: backend, admin, Android APK and AAB" >> "$GITHUB_STEP_SUMMARY"

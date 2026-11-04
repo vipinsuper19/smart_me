@@ -73,6 +73,12 @@ export const envSchema = z
 
     /** Grace period before a requested account deletion is processed. */
     ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+    /** Interval-based processor; disable when an external job owns deletion. */
+    ACCOUNT_DELETION_SCHEDULER_ENABLED: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
+    ACCOUNT_DELETION_INTERVAL_SECONDS: z.coerce.number().int().min(5).max(86_400).default(3_600),
 
     BILLING_ENABLED: z
       .enum(['true', 'false'])
