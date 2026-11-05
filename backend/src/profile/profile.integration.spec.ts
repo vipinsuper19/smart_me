@@ -2,7 +2,9 @@ import 'dotenv/config';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { ApiException } from '../common/errors/api-error';
+import { parseDateOnly } from '../common/utils/date-only';
 import { ContentLanguage, LearningGoal, ProficiencyLevel } from '../generated/prisma/enums';
+import { localDateKey, shiftDateKey } from '../gamification/date-zone';
 import { PrismaService } from '../prisma/prisma.service';
 import { PreferencesService } from './preferences.service';
 import { ProfileService } from './profile.service';
@@ -187,6 +189,57 @@ describeIfDatabase('Profile, preferences and onboarding integration', () => {
       dailyGoalMinutes: 5,
       interests: [],
     });
+  });
+
+  it('applies a daily-goal change to today without rewriting past days', async () => {
+    const user = await createUser();
+    await preferences.updatePreferences(user.id, { dailyGoalMinutes: 10 });
+
+    const todayKey = localDateKey(new Date(), 'Asia/Kolkata');
+    const yesterdayKey = shiftDateKey(todayKey, -1);
+    const today = parseDateOnly(todayKey)!;
+    const yesterday = parseDateOnly(yesterdayKey)!;
+
+    await prisma.dailyActivity.createMany({
+      data: [
+        {
+          userId: user.id,
+          activityDate: today,
+          minutesLearned: 7,
+          dailyGoalMinutes: 10,
+          goalMet: false,
+        },
+        {
+          userId: user.id,
+          activityDate: yesterday,
+          minutesLearned: 2,
+          dailyGoalMinutes: 10,
+          goalMet: false,
+        },
+      ],
+    });
+
+    await preferences.updatePreferences(user.id, { dailyGoalMinutes: 5 });
+
+    const lowered = await prisma.dailyActivity.findUniqueOrThrow({
+      where: { userId_activityDate: { userId: user.id, activityDate: today } },
+    });
+    expect(lowered.dailyGoalMinutes).toBe(5);
+    expect(lowered.goalMet).toBe(true);
+
+    await preferences.updatePreferences(user.id, { dailyGoalMinutes: 15 });
+
+    const raised = await prisma.dailyActivity.findUniqueOrThrow({
+      where: { userId_activityDate: { userId: user.id, activityDate: today } },
+    });
+    expect(raised.dailyGoalMinutes).toBe(15);
+    expect(raised.goalMet).toBe(false);
+
+    const past = await prisma.dailyActivity.findUniqueOrThrow({
+      where: { userId_activityDate: { userId: user.id, activityDate: yesterday } },
+    });
+    expect(past.dailyGoalMinutes).toBe(10);
+    expect(past.goalMet).toBe(false);
   });
 
   it('enforces daily-goal and interest invariants in the service', async () => {

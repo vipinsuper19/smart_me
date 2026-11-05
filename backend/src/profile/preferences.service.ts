@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { validationError } from '../common/errors/validation-error';
 import { isPrismaErrorWithCode } from '../common/prisma/prisma-errors';
-import type { UserPreference } from '../generated/prisma/client';
+import { parseDateOnly } from '../common/utils/date-only';
+import { localDateKey } from '../gamification/date-zone';
+import type { Prisma, UserPreference } from '../generated/prisma/client';
 import { ContentLanguage, LearningGoal, ProficiencyLevel } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
@@ -32,7 +34,29 @@ export class PreferencesService {
 
   async updatePreferences(userId: string, dto: UpdatePreferencesDto): Promise<PreferencesView> {
     const data = this.preferenceData(dto);
-    return toPreferencesView(await this.upsertPreferences(userId, data));
+    const goalMinutes = data.dailyGoalMinutes;
+
+    if (goalMinutes === undefined) {
+      return toPreferencesView(await this.upsertPreferences(userId, data));
+    }
+
+    const now = new Date();
+    const preferences = await this.prisma
+      .$transaction(async (tx) => {
+        const updated = await tx.userPreference.upsert({
+          where: { userId },
+          update: data,
+          create: { userId, ...data },
+        });
+
+        await this.syncTodayDailyGoal(tx, userId, goalMinutes, now);
+        return updated;
+      })
+      .catch((error: unknown) => {
+        throw this.mapMissingUserError(error);
+      });
+
+    return toPreferencesView(preferences);
   }
 
   async getOnboarding(userId: string): Promise<OnboardingView> {
@@ -67,6 +91,7 @@ export class PreferencesService {
     }
 
     const data = this.preferenceData(dto);
+    const goalMinutes = data.dailyGoalMinutes;
     const now = new Date();
 
     const result = await this.prisma
@@ -76,6 +101,10 @@ export class PreferencesService {
           update: data,
           create: { userId, ...data },
         });
+
+        if (goalMinutes !== undefined) {
+          await this.syncTodayDailyGoal(tx, userId, goalMinutes, now);
+        }
 
         const updatedUser = await tx.user.update({
           where: { id: userId },
@@ -107,6 +136,51 @@ export class PreferencesService {
     } catch (error) {
       throw this.mapMissingUserError(error);
     }
+  }
+
+  /**
+   * Today's goal is snapshotted on `daily_activity`, so a preference change
+   * must also refresh the current day or the app keeps showing the old target
+   * until tomorrow. Past days stay untouched on purpose: they record the goal
+   * that was in force at the time.
+   */
+  private async syncTodayDailyGoal(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    goalMinutes: number,
+    now: Date,
+  ): Promise<void> {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { timeZone: true },
+    });
+
+    if (!user) {
+      throw userNotFound();
+    }
+
+    const today = parseDateOnly(localDateKey(now, user.timeZone));
+    if (!today) {
+      return;
+    }
+
+    const where = { userId_activityDate: { userId, activityDate: today } };
+    const activity = await tx.dailyActivity.findUnique({
+      where,
+      select: { minutesLearned: true },
+    });
+
+    if (!activity) {
+      return;
+    }
+
+    await tx.dailyActivity.update({
+      where,
+      data: {
+        dailyGoalMinutes: goalMinutes,
+        goalMet: activity.minutesLearned >= goalMinutes,
+      },
+    });
   }
 
   private mapMissingUserError(error: unknown): unknown {
