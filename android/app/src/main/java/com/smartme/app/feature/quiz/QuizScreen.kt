@@ -567,7 +567,7 @@ private fun ResultQuestionCard(question: QuizResultQuestionDto) {
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
                 Icon(
                     imageVector = if (question.isCorrect) {
@@ -581,10 +581,13 @@ private fun ResultQuestionCard(question: QuizResultQuestionDto) {
                     } else {
                         MaterialTheme.colorScheme.error
                     },
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .size(18.dp),
                 )
                 Text(
                     text = question.prompt,
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -646,25 +649,30 @@ private fun ResultOptionRow(option: QuizResultOptionDto) {
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
             if (option.isCorrect) {
                 Icon(
                     imageVector = Icons.Outlined.CheckCircle,
                     contentDescription = null,
                     tint = contentColor,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .size(16.dp),
                 )
             } else if (option.selected) {
                 Icon(
                     imageVector = Icons.Outlined.Close,
                     contentDescription = null,
                     tint = contentColor,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .size(16.dp),
                 )
             }
             Text(
                 text = option.text,
+                modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
                 color = contentColor,
             )

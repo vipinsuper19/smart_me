@@ -183,38 +183,42 @@ internal fun SubscriptionContent(
             item { PremiumHero() }
 
             if (me?.billingEnabled == false) {
+                // Without billing, prices would advertise something the learner
+                // cannot buy. Show the value proposition instead.
                 item {
                     NoticeCard(
                         message = stringResource(R.string.subscription_billing_disabled),
                         tone = NoticeTone.Neutral,
                     )
                 }
-            }
-
-            item {
-                Text(
-                    text = stringResource(R.string.subscription_plans_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-
-            state.plans.forEach { plan ->
-                item(key = plan.id) {
-                    PlanCard(
-                        plan = plan,
-                        selected = plan.id == state.selectedPlanId,
-                        enabled = !state.busy,
-                        onClick = { onSelectPlan(plan.id) },
+                val benefits = state.plans.flatMap { it.benefits }.distinct()
+                if (benefits.isNotEmpty()) {
+                    item { BenefitsCard(benefits = benefits) }
+                }
+            } else {
+                item {
+                    Text(
+                        text = stringResource(R.string.subscription_plans_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
-            }
 
-            if (selectedBenefits.isNotEmpty()) {
-                item { BenefitsCard(benefits = selectedBenefits) }
-            }
+                state.plans.forEach { plan ->
+                    item(key = plan.id) {
+                        PlanCard(
+                            plan = plan,
+                            selected = plan.id == state.selectedPlanId,
+                            enabled = !state.busy,
+                            onClick = { onSelectPlan(plan.id) },
+                        )
+                    }
+                }
 
-            if (me?.billingEnabled != false) {
+                if (selectedBenefits.isNotEmpty()) {
+                    item { BenefitsCard(benefits = selectedBenefits) }
+                }
+
                 item {
                     Button(
                         onClick = onSubscribe,
@@ -236,30 +240,30 @@ internal fun SubscriptionContent(
                         }
                     }
                 }
-            }
 
-            item {
-                OutlinedButton(
-                    onClick = onRestore,
-                    enabled = !state.busy,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Text(text = stringResource(R.string.subscription_restore))
-                }
-            }
-
-            if (selectedPlan != null) {
                 item {
-                    Text(
-                        text = stringResource(
-                            R.string.subscription_terms,
-                            formatPriceInPaise(selectedPlan.priceInPaise, selectedPlan.currency),
-                            stringResource(billingPeriodRes(selectedPlan.billingPeriod)),
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    OutlinedButton(
+                        onClick = onRestore,
+                        enabled = !state.busy,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        Text(text = stringResource(R.string.subscription_restore))
+                    }
+                }
+
+                if (selectedPlan != null) {
+                    item {
+                        Text(
+                            text = stringResource(
+                                R.string.subscription_terms,
+                                formatPriceInPaise(selectedPlan.priceInPaise, selectedPlan.currency),
+                                stringResource(billingPeriodRes(selectedPlan.billingPeriod)),
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }

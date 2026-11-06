@@ -137,7 +137,10 @@
     <string name="learning_premium_required_title">Premium lesson</string>
     <string name="learning_premium_required_body">This lesson is part of SmartMe Premium. Upgrade to unlock the full lesson.</string>
     <string name="learning_minutes">%1$d min</string>
-    <string name="learning_lessons_count">%1$d lessons</string>
+    <plurals name="learning_lessons_count">
+        <item quantity="one">%1$d lesson</item>
+        <item quantity="other">%1$d lessons</item>
+    </plurals>
     <string name="learning_progress_percent">%1$d%% complete</string>
     <string name="learning_completed">Completed</string>
     <string name="learning_in_progress">In progress</string>
@@ -245,11 +248,20 @@
 
     <!-- Progress dashboard -->
     <string name="progress_subtitle">See how far you\'ve come and what to do next.</string>
-    <string name="progress_longest_streak">Best: %1$d days</string>
+    <plurals name="progress_longest_streak">
+        <item quantity="one">Best: %1$d day</item>
+        <item quantity="other">Best: %1$d days</item>
+    </plurals>
     <string name="progress_level_progress">%1$d%% of the way to level %2$d</string>
     <string name="progress_weekly_title">This week</string>
-    <string name="progress_weekly_totals">%1$d lessons · %2$d min</string>
-    <string name="progress_weekly_goal_days">%1$d goal days</string>
+    <plurals name="progress_weekly_totals">
+        <item quantity="one">%1$d lesson · %2$d min</item>
+        <item quantity="other">%1$d lessons · %2$d min</item>
+    </plurals>
+    <plurals name="progress_weekly_goal_days">
+        <item quantity="one">%1$d goal day</item>
+        <item quantity="other">%1$d goal days</item>
+    </plurals>
     <string name="progress_weekly_legend">A filled dot means you reached your daily goal.</string>
     <string name="progress_weekly_minutes">%1$d</string>
     <string name="progress_stats_title">Your numbers</string>

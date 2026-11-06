@@ -195,7 +195,7 @@ private fun ProfileBody(
             color = MaterialTheme.colorScheme.onSurface,
         )
 
-        AccountCard(profile = profile, fallbackUser = fallbackUser, onEditProfile = onEditProfile)
+        AccountCard(profile = profile, fallbackUser = fallbackUser)
 
         SettingsSection(title = stringResource(R.string.profile_section_learning)) {
             ActionRow(
@@ -279,7 +279,6 @@ private fun ProfileBody(
 private fun AccountCard(
     profile: ProfileDto?,
     fallbackUser: UserSummary?,
-    onEditProfile: () -> Unit,
 ) {
     val displayName = profile?.name
         ?.takeIf { it.isNotBlank() }
@@ -345,10 +344,6 @@ private fun AccountCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-            }
-
-            TextButton(onClick = onEditProfile) {
-                Text(text = stringResource(R.string.profile_edit_action))
             }
         }
     }

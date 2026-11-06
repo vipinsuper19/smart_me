@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -197,7 +198,11 @@ private fun LevelCard(overview: ProgressOverviewDto) {
                         )
                     }
                     Text(
-                        text = stringResource(R.string.progress_longest_streak, overview.longestStreak),
+                        text = pluralStringResource(
+                            R.plurals.progress_longest_streak,
+                            overview.longestStreak,
+                            overview.longestStreak,
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
@@ -324,8 +329,9 @@ private fun WeeklyCard(weekly: WeeklyProgressDto) {
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = stringResource(
-                            R.string.progress_weekly_totals,
+                        text = pluralStringResource(
+                            R.plurals.progress_weekly_totals,
+                            weekly.totals.lessonsCompleted,
                             weekly.totals.lessonsCompleted,
                             weekly.totals.minutesLearned,
                         ),
@@ -334,8 +340,9 @@ private fun WeeklyCard(weekly: WeeklyProgressDto) {
                     )
                 }
                 Text(
-                    text = stringResource(
-                        R.string.progress_weekly_goal_days,
+                    text = pluralStringResource(
+                        R.plurals.progress_weekly_goal_days,
+                        weekly.totals.goalDays,
                         weekly.totals.goalDays,
                     ),
                     style = MaterialTheme.typography.labelSmall,
