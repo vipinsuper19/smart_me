@@ -322,7 +322,7 @@ private fun LessonRow(lesson: LessonCardDto, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 DurationLabel(minutes = lesson.estimatedMinutes)
-                if (lesson.requiresQuiz) {
+                if (lesson.requiresQuiz && !completed) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
                         verticalAlignment = Alignment.CenterVertically,
