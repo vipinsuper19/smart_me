@@ -109,7 +109,7 @@ private fun MainScaffold(
     }
 }
 
-private fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
+internal fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
     navigate(destination.route) {
         // Keep one instance per tab and restore each tab's own scroll/state.
         popUpTo(graph.findStartDestination().id) { saveState = true }

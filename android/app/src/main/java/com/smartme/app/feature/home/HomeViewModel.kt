@@ -6,6 +6,7 @@ import com.smartme.app.core.model.UiState
 import com.smartme.app.core.network.ApiResult
 import com.smartme.app.core.network.ContinueLearningItemDto
 import com.smartme.app.core.network.GamificationSummaryDto
+import com.smartme.app.core.network.LearningPathDto
 import com.smartme.app.core.network.RecommendedLessonDto
 import com.smartme.app.data.learning.LearningRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +23,7 @@ data class HomeData(
     val summary: GamificationSummaryDto,
     val continueLearning: ContinueLearningItemDto?,
     val recommended: RecommendedLessonDto?,
+    val paths: List<LearningPathDto> = emptyList(),
 )
 
 /**
@@ -68,11 +70,15 @@ class HomeViewModel @Inject constructor(
             }
 
             val summaryData = (summary as ApiResult.Success).data
-            val (continueLearning, recommended) = coroutineScope {
+            val (continueLearning, recommended, paths) = coroutineScope {
                 val continueDeferred = async { repository.continueLearning() }
                 val recommendedDeferred = async { repository.recommendedLesson() }
-                (continueDeferred.await() as? ApiResult.Success)?.data to
-                    (recommendedDeferred.await() as? ApiResult.Success)?.data
+                val pathsDeferred = async { repository.learningPaths() }
+                Triple(
+                    (continueDeferred.await() as? ApiResult.Success)?.data,
+                    (recommendedDeferred.await() as? ApiResult.Success)?.data,
+                    (pathsDeferred.await() as? ApiResult.Success)?.data.orEmpty(),
+                )
             }
 
             _state.value = UiState.Content(
@@ -80,6 +86,7 @@ class HomeViewModel @Inject constructor(
                     summary = summaryData,
                     continueLearning = continueLearning,
                     recommended = recommended,
+                    paths = paths,
                 ),
             )
         }

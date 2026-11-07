@@ -16,11 +16,15 @@ private fun HomeDashboardPreview() {
                     summary = LearningSamples.summary,
                     continueLearning = LearningSamples.continueItem,
                     recommended = LearningSamples.recommendation,
+                    paths = LearningSamples.paths,
                 ),
             ),
             userName = "Aarav",
             onRetry = {},
             onOpenLesson = {},
+            onOpenPath = {},
+            onSeeAllPaths = {},
+            onOpenNotifications = {},
         )
     }
 }
@@ -39,11 +43,15 @@ private fun HomeNewLearnerPreview() {
                     ),
                     continueLearning = null,
                     recommended = LearningSamples.recommendation,
+                    paths = LearningSamples.paths,
                 ),
             ),
             userName = "",
             onRetry = {},
             onOpenLesson = {},
+            onOpenPath = {},
+            onSeeAllPaths = {},
+            onOpenNotifications = {},
         )
     }
 }
@@ -57,6 +65,9 @@ private fun HomeLoadingPreview() {
             userName = "Aarav",
             onRetry = {},
             onOpenLesson = {},
+            onOpenPath = {},
+            onSeeAllPaths = {},
+            onOpenNotifications = {},
         )
     }
 }
@@ -73,6 +84,9 @@ private fun HomeErrorPreview() {
             userName = "Aarav",
             onRetry = {},
             onOpenLesson = {},
+            onOpenPath = {},
+            onSeeAllPaths = {},
+            onOpenNotifications = {},
         )
     }
 }

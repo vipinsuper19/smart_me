@@ -1,36 +1,51 @@
 package com.smartme.app.feature.home
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.LocalFireDepartment
-import androidx.compose.material.icons.outlined.PlayCircle
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.Savings
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -44,25 +59,23 @@ import com.smartme.app.core.designsystem.theme.Spacing
 import com.smartme.app.core.model.UiState
 import com.smartme.app.core.network.DailyGoalDto
 import com.smartme.app.core.network.GamificationSummaryDto
-import com.smartme.app.core.network.LessonCardDto
-import com.smartme.app.feature.learning.AccessTierBadge
-import com.smartme.app.feature.learning.DifficultyLabel
-import com.smartme.app.feature.learning.DurationLabel
+import com.smartme.app.core.network.LearningPathDto
 import com.smartme.app.feature.learning.LearningProgressBar
-import java.time.LocalTime
 
 /**
- * Home dashboard from PRD §6.1: greeting, daily goal, streak, XP, continue
- * learning and a recommendation.
+ * Home dashboard, following the product mock: greeting and notification bell,
+ * streak/XP tiles, the daily goal, a continue-learning card and a subject grid.
  *
- * The daily challenge card is intentionally absent until the backend exposes a
- * daily-challenge endpoint; showing a card with invented progress would be
- * worse than leaving it for that follow-up.
+ * The continue card falls back to the recommended lesson when the learner has
+ * no lesson in progress, so the section is never empty for a new account.
  */
 @Composable
 fun HomeScreen(
     userName: String,
     onOpenLesson: (String) -> Unit,
+    onOpenPath: (String) -> Unit,
+    onSeeAllPaths: () -> Unit,
+    onOpenNotifications: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -78,6 +91,9 @@ fun HomeScreen(
         userName = userName,
         onRetry = viewModel::load,
         onOpenLesson = onOpenLesson,
+        onOpenPath = onOpenPath,
+        onSeeAllPaths = onSeeAllPaths,
+        onOpenNotifications = onOpenNotifications,
         modifier = modifier,
     )
 }
@@ -88,6 +104,9 @@ internal fun HomeContent(
     userName: String,
     onRetry: () -> Unit,
     onOpenLesson: (String) -> Unit,
+    onOpenPath: (String) -> Unit,
+    onSeeAllPaths: () -> Unit,
+    onOpenNotifications: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
@@ -110,6 +129,9 @@ internal fun HomeContent(
             data = state.data,
             userName = userName,
             onOpenLesson = onOpenLesson,
+            onOpenPath = onOpenPath,
+            onSeeAllPaths = onSeeAllPaths,
+            onOpenNotifications = onOpenNotifications,
             modifier = modifier,
         )
     }
@@ -120,75 +142,51 @@ private fun HomeDashboard(
     data: HomeData,
     userName: String,
     onOpenLesson: (String) -> Unit,
+    onOpenPath: (String) -> Unit,
+    onSeeAllPaths: () -> Unit,
+    onOpenNotifications: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val greeting = remember { greetingResForHour(LocalTime.now().hour) }
+    val continueCard = continueCardData(data)
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+        contentPadding = PaddingValues(
             start = Spacing.screen,
             end = Spacing.screen,
             top = Spacing.xl,
             bottom = Spacing.xl,
         ),
-        verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xl),
     ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Text(
-                    text = if (userName.isBlank()) {
-                        stringResource(greeting)
-                    } else {
-                        stringResource(
-                            R.string.home_greeting_with_name,
-                            stringResource(greeting),
-                            userName,
-                        )
-                    },
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = stringResource(R.string.home_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+        item { HomeHeader(userName = userName, onOpenNotifications = onOpenNotifications) }
+
+        item { StatTiles(summary = data.summary) }
+
+        data.summary.dailyGoal?.let { goal ->
+            item { DailyGoalLine(goal = goal) }
         }
 
-        item { DailyGoalCard(summary = data.summary) }
-
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                StreakCard(
-                    streak = data.summary.currentStreak,
-                    modifier = Modifier.weight(1f),
-                )
-                XpCard(summary = data.summary, modifier = Modifier.weight(1f))
-            }
-        }
-
-        data.continueLearning?.let { item ->
+        if (continueCard != null) {
             item {
-                ContinueLearningCard(
-                    item = item,
-                    onClick = { onOpenLesson(item.lesson.id) },
+                ContinueLearningSection(
+                    card = continueCard,
+                    onClick = { onOpenLesson(continueCard.lessonId) },
                 )
             }
         }
 
-        data.recommended?.let { recommended ->
+        if (data.paths.isNotEmpty()) {
             item {
-                RecommendedLessonCard(
-                    lesson = recommended.lesson,
-                    reason = recommended.reason,
-                    onClick = { onOpenLesson(recommended.lesson.id) },
+                ExploreSubjectsSection(
+                    paths = data.paths,
+                    onOpenPath = onOpenPath,
+                    onSeeAllPaths = onSeeAllPaths,
                 )
             }
         }
 
-        if (data.continueLearning == null && data.recommended == null) {
+        if (continueCard == null && data.paths.isEmpty()) {
             item {
                 EmptyState(
                     title = stringResource(R.string.home_no_content_title),
@@ -199,216 +197,249 @@ private fun HomeDashboard(
     }
 }
 
-/** Maps the current hour to a greeting without touching the clock, so it is testable. */
-internal fun greetingResForHour(hour: Int): Int = when {
-    hour < 0 || hour > 23 -> R.string.home_greeting_day
-    hour < 12 -> R.string.home_greeting_morning
-    hour < 17 -> R.string.home_greeting_afternoon
-    else -> R.string.home_greeting_evening
+@Composable
+private fun HomeHeader(
+    userName: String,
+    onOpenNotifications: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        ) {
+            Text(
+                text = if (userName.isBlank()) {
+                    stringResource(R.string.home_hi)
+                } else {
+                    stringResource(R.string.home_hi_with_name, userName)
+                },
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(R.string.home_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        IconButton(onClick = onOpenNotifications) {
+            Icon(
+                imageVector = Icons.Outlined.NotificationsNone,
+                contentDescription = stringResource(R.string.home_notifications_action),
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
 }
 
 @Composable
-private fun DailyGoalCard(summary: GamificationSummaryDto) {
-    val goal = summary.dailyGoal ?: DailyGoalDto(
-        date = "",
-        minutesLearned = summary.minutesLearned,
-    )
-
-    OutlinedCard(
+private fun StatTiles(summary: GamificationSummaryDto) {
+    Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        StatTile(
+            icon = Icons.Filled.LocalFireDepartment,
+            value = summary.currentStreak.toString(),
+            label = stringResource(R.string.home_day_streak),
+            tint = SmartMeTheme.colors.streak,
+            modifier = Modifier.weight(1f),
+        )
+        StatTile(
+            icon = Icons.Filled.Star,
+            value = summary.totalXp.toString(),
+            label = stringResource(R.string.home_total_xp),
+            tint = SmartMeTheme.colors.xp,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun StatTile(
+    icon: ImageVector,
+    value: String,
+    label: String,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedCard(
+        modifier = modifier,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
     ) {
-        Column(
-            modifier = Modifier.padding(Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        Row(
+            modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(30.dp),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 Text(
-                    text = stringResource(R.string.home_goal_title),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = value,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = if (goal.met) {
-                        stringResource(R.string.home_goal_met)
-                    } else {
-                        stringResource(
-                            R.string.home_goal_remaining,
-                            (goal.targetMinutes - goal.minutesLearned).coerceAtLeast(0),
-                        )
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (goal.met) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    },
-                    fontWeight = FontWeight.SemiBold,
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(
-                text = stringResource(
-                    R.string.home_goal_minutes,
-                    goal.minutesLearned,
-                    goal.targetMinutes,
-                ),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            LearningProgressBar(percent = goal.percent)
         }
     }
 }
 
 @Composable
-private fun StreakCard(streak: Int, modifier: Modifier = Modifier) {
-    OutlinedCard(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.outlinedCardColors(
-            containerColor = SmartMeTheme.colors.streakContainer,
-        ),
-    ) {
-        Column(
-            modifier = Modifier.padding(Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+private fun DailyGoalLine(goal: DailyGoalDto) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Outlined.LocalFireDepartment,
-                contentDescription = null,
-                tint = SmartMeTheme.colors.onStreakContainer,
-                modifier = Modifier.size(22.dp),
-            )
             Text(
-                text = stringResource(R.string.home_streak_title),
+                text = stringResource(R.string.home_goal_title),
                 style = MaterialTheme.typography.labelMedium,
-                color = SmartMeTheme.colors.onStreakContainer,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = if (streak == 1) {
-                    stringResource(R.string.home_streak_one_day)
+                text = if (goal.met) {
+                    stringResource(R.string.home_goal_met)
                 } else {
-                    stringResource(R.string.home_streak_days, streak)
+                    stringResource(
+                        R.string.home_goal_remaining,
+                        (goal.targetMinutes - goal.minutesLearned).coerceAtLeast(0),
+                    )
                 },
-                style = MaterialTheme.typography.titleLarge,
-                color = SmartMeTheme.colors.onStreakContainer,
-            )
-        }
-    }
-}
-
-@Composable
-private fun XpCard(summary: GamificationSummaryDto, modifier: Modifier = Modifier) {
-    OutlinedCard(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.outlinedCardColors(
-            containerColor = SmartMeTheme.colors.xpContainer,
-        ),
-    ) {
-        Column(
-            modifier = Modifier.padding(Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Star,
-                contentDescription = null,
-                tint = SmartMeTheme.colors.onXpContainer,
-                modifier = Modifier.size(22.dp),
-            )
-            Text(
-                text = stringResource(R.string.home_level, summary.level),
                 style = MaterialTheme.typography.labelMedium,
-                color = SmartMeTheme.colors.onXpContainer,
-            )
-            Text(
-                text = "${summary.totalXp} XP",
-                style = MaterialTheme.typography.titleLarge,
-                color = SmartMeTheme.colors.onXpContainer,
-            )
-            Text(
-                text = stringResource(
-                    R.string.home_xp_to_next,
-                    summary.levelProgress.xpToNextLevel,
-                    summary.level + 1,
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = SmartMeTheme.colors.onXpContainer,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.SemiBold,
+                color = if (goal.met) {
+                    MaterialTheme.colorScheme.secondary
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
             )
         }
+        LearningProgressBar(percent = goal.percent)
     }
 }
 
 @Composable
-private fun ContinueLearningCard(
-    item: com.smartme.app.core.network.ContinueLearningItemDto,
+private fun ContinueLearningSection(
+    card: ContinueCardData,
     onClick: () -> Unit,
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-    ) {
-        Column(
-            modifier = Modifier.padding(Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        SectionHeader(title = stringResource(R.string.home_continue_title))
+        OutlinedCard(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                modifier = Modifier.padding(Spacing.lg),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                SubjectIcon(slug = card.pathSlug, size = 56.dp, iconSize = 28.dp)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                ) {
+                    Text(
+                        text = card.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = card.pathTitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Row(
+                        modifier = Modifier.padding(top = Spacing.xs),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        LearningProgressBar(
+                            percent = card.progressPercent,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.home_continue_progress,
+                                card.progressPercent,
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 Icon(
-                    imageVector = Icons.Outlined.PlayCircle,
+                    imageVector = Icons.Outlined.ChevronRight,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                )
-                Text(
-                    text = stringResource(R.string.home_continue_title),
-                    style = MaterialTheme.typography.labelMedium,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp),
                 )
             }
-            Text(
-                text = item.lesson.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = "${item.learningPath.title} · ${item.lesson.module.title}",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            LearningProgressBar(percent = item.progress.progressPercent)
+        }
+    }
+}
+
+@Composable
+private fun ExploreSubjectsSection(
+    paths: List<LearningPathDto>,
+    onOpenPath: (String) -> Unit,
+    onSeeAllPaths: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        SectionHeader(
+            title = stringResource(R.string.home_explore_subjects),
+            action = stringResource(R.string.home_see_all),
+            onAction = onSeeAllPaths,
+        )
+        paths.chunked(SUBJECT_COLUMNS).forEach { rowPaths ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             ) {
-                Text(
-                    text = stringResource(
-                        R.string.learning_progress_percent,
-                        item.progress.progressPercent,
-                    ),
-                    style = MaterialTheme.typography.labelMedium,
-                )
-                Button(onClick = onClick, shape = MaterialTheme.shapes.medium) {
-                    Text(text = stringResource(R.string.home_continue_action))
-                    Spacer(modifier = Modifier.size(Spacing.xs))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                rowPaths.forEach { path ->
+                    SubjectCard(
+                        path = path,
+                        onClick = { onOpenPath(path.id) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
                     )
+                }
+                repeat(SUBJECT_COLUMNS - rowPaths.size) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -416,70 +447,159 @@ private fun ContinueLearningCard(
 }
 
 @Composable
-private fun RecommendedLessonCard(
-    lesson: LessonCardDto,
-    reason: String,
+private fun SubjectCard(
+    path: LearningPathDto,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 108.dp),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
     ) {
         Column(
-            modifier = Modifier.padding(Spacing.lg),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.sm, vertical = Spacing.md),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
+            SubjectIcon(slug = path.slug, size = 48.dp, iconSize = 26.dp)
             Text(
-                text = stringResource(R.string.home_recommended_title),
+                text = path.title,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = lesson.title,
-                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = lesson.summary,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    action: String? = null,
+    onAction: () -> Unit = {},
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (action != null) {
+            TextButton(
+                onClick = onAction,
+                contentPadding = PaddingValues(horizontal = Spacing.sm),
             ) {
-                AccessTierBadge(accessTier = lesson.effectiveAccessTier, locked = lesson.locked)
-                DifficultyLabel(difficulty = lesson.difficulty)
-                DurationLabel(minutes = lesson.estimatedMinutes)
-            }
-            Text(
-                text = stringResource(recommendationReasonRes(reason)),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(onClick = onClick, shape = MaterialTheme.shapes.medium) {
-                Text(text = stringResource(R.string.home_start_lesson))
-                Spacer(modifier = Modifier.size(Spacing.xs))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                Text(
+                    text = action,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
     }
 }
 
-private fun recommendationReasonRes(reason: String): Int = when (reason) {
-    "PREFERENCE_MATCH" -> R.string.home_recommended_preference
-    "PREMIUM_CONTENT" -> R.string.home_recommended_premium
-    else -> R.string.home_recommended_first
+@Composable
+private fun SubjectIcon(
+    slug: String,
+    size: Dp,
+    iconSize: Dp,
+) {
+    val visual = subjectVisual(slug)
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(14.dp))
+            .background(visual.container),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = visual.icon,
+            contentDescription = null,
+            tint = visual.content,
+            modifier = Modifier.size(iconSize),
+        )
+    }
 }
+
+private data class SubjectVisual(
+    val icon: ImageVector,
+    val container: Color,
+    val content: Color,
+)
+
+@Composable
+private fun subjectVisual(slug: String): SubjectVisual {
+    val scheme = MaterialTheme.colorScheme
+    return when (slug) {
+        "english-communication" -> SubjectVisual(
+            icon = Icons.AutoMirrored.Outlined.MenuBook,
+            container = scheme.primaryContainer,
+            content = scheme.onPrimaryContainer,
+        )
+
+        "career-workplace-skills" -> SubjectVisual(
+            icon = Icons.Outlined.WorkOutline,
+            container = scheme.secondaryContainer,
+            content = scheme.onSecondaryContainer,
+        )
+
+        "financial-literacy" -> SubjectVisual(
+            icon = Icons.Outlined.Savings,
+            container = scheme.tertiaryContainer,
+            content = scheme.onTertiaryContainer,
+        )
+
+        else -> SubjectVisual(
+            icon = Icons.Outlined.School,
+            container = scheme.surfaceVariant,
+            content = scheme.onSurfaceVariant,
+        )
+    }
+}
+
+private data class ContinueCardData(
+    val lessonId: String,
+    val title: String,
+    val pathTitle: String,
+    val pathSlug: String,
+    val progressPercent: Int,
+)
+
+private fun continueCardData(data: HomeData): ContinueCardData? {
+    data.continueLearning?.let { item ->
+        return ContinueCardData(
+            lessonId = item.lesson.id,
+            title = item.lesson.title,
+            pathTitle = item.learningPath.title,
+            pathSlug = item.learningPath.slug,
+            progressPercent = item.progress.progressPercent,
+        )
+    }
+    data.recommended?.let { item ->
+        return ContinueCardData(
+            lessonId = item.lesson.id,
+            title = item.lesson.title,
+            pathTitle = item.learningPath.title,
+            pathSlug = item.learningPath.slug,
+            progressPercent = item.lesson.progress?.progressPercent ?: 0,
+        )
+    }
+    return null
+}
+
+private const val SUBJECT_COLUMNS = 3

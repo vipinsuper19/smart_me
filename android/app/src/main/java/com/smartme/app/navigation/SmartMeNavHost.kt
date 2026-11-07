@@ -43,6 +43,15 @@ fun SmartMeNavHost(
                 onOpenLesson = { lessonId ->
                     navController.navigate(LessonRoute(lessonId))
                 },
+                onOpenPath = { pathId ->
+                    navController.navigate(PathDetailRoute(pathId))
+                },
+                onSeeAllPaths = {
+                    navController.navigateToTopLevel(TopLevelDestination.EXPLORE)
+                },
+                onOpenNotifications = {
+                    navController.navigate(NotificationSettingsRoute)
+                },
             )
         }
         composable<ExploreRoute> {
