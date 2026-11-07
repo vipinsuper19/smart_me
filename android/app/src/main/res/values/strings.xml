@@ -16,7 +16,7 @@
     <!-- Home -->
     <string name="home_hi">Hi there!</string>
     <string name="home_hi_with_name">Hi %1$s!</string>
-    <string name="home_subtitle">Let\'s keep learning today.</string>
+    <string name="home_subtitle">Let\'s keep learning today</string>
 
     <!-- Placeholder tabs -->
     <string name="placeholder_note">Coming in a later build</string>
