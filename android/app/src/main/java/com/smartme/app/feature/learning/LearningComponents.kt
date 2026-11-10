@@ -134,11 +134,17 @@ fun DurationLabel(minutes: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LearningProgressBar(percent: Int, modifier: Modifier = Modifier) {    LinearProgressIndicator(
+fun LearningProgressBar(
+    percent: Int,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    trackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+) {
+    LinearProgressIndicator(
         progress = { (percent.coerceIn(0, 100) / 100f) },
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.primary,
-        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        color = color,
+        trackColor = trackColor,
     )
 }
 

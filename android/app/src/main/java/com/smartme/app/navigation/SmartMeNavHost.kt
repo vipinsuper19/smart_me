@@ -86,6 +86,7 @@ fun SmartMeNavHost(
                 onOpenCourse = { courseId ->
                     navController.navigate(CourseDetailRoute(courseId))
                 },
+                onOpenAchievements = { navController.navigate(AchievementsRoute) },
             )
         }
         composable<CourseDetailRoute> {

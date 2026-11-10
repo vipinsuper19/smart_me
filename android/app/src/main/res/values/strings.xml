@@ -177,8 +177,32 @@
     <string name="explore_empty_title">No learning paths yet</string>
     <string name="explore_empty_body">Courses will appear here as soon as they are published.</string>
     <string name="explore_error_title">We couldn\'t load the catalogue</string>
-    <string name="path_detail_courses">Courses in this path</string>
     <string name="path_detail_error_title">We couldn\'t load this learning path</string>
+    <string name="path_detail_progress_label">Course Progress</string>
+    <string name="path_detail_minutes_per_lesson">~%1$d min / lesson</string>
+    <plurals name="path_detail_lessons_ratio">
+        <item quantity="one">%1$d / %2$d lesson</item>
+        <item quantity="other">%1$d / %2$d lessons</item>
+    </plurals>
+    <string name="path_detail_locked">Locked</string>
+    <string name="path_detail_continue">Continue</string>
+    <string name="path_detail_start">Start</string>
+    <string name="path_detail_refresh">Refresh</string>
+    <string name="path_detail_achievements">Achievements</string>
+    <string name="path_detail_more_actions">More options</string>
+    <string name="path_detail_mastery_body">Earn the %1$s Mastery badge!</string>
+    <plurals name="path_detail_levels_count">
+        <item quantity="one">%1$d Level</item>
+        <item quantity="other">%1$d Levels</item>
+    </plurals>
+    <plurals name="path_detail_lessons_count">
+        <item quantity="one">%1$d Lesson</item>
+        <item quantity="other">%1$d Lessons</item>
+    </plurals>
+    <plurals name="path_detail_mastery_title">
+        <item quantity="one">Complete all %1$d Level</item>
+        <item quantity="other">Complete all %1$d Levels</item>
+    </plurals>
     <string name="course_detail_objectives">What you\'ll learn</string>
     <string name="course_detail_contents">Course contents</string>
     <string name="course_detail_prerequisites">Prerequisites</string>

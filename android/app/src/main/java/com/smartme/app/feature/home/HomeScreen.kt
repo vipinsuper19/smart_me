@@ -1,8 +1,6 @@
 package com.smartme.app.feature.home
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,16 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material.icons.outlined.Savings
-import androidx.compose.material.icons.outlined.School
-import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,14 +31,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -61,6 +52,7 @@ import com.smartme.app.core.network.DailyGoalDto
 import com.smartme.app.core.network.GamificationSummaryDto
 import com.smartme.app.core.network.LearningPathDto
 import com.smartme.app.feature.learning.LearningProgressBar
+import com.smartme.app.feature.learning.PathIconTile
 
 /**
  * Home dashboard, following the product mock: greeting and notification bell,
@@ -360,7 +352,7 @@ private fun ContinueLearningSection(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                SubjectIcon(slug = card.pathSlug, size = 56.dp, iconSize = 28.dp)
+                PathIconTile(slug = card.pathSlug, size = 56.dp, iconSize = 28.dp)
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(Spacing.xs),
@@ -467,7 +459,7 @@ private fun SubjectCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
-            SubjectIcon(slug = path.slug, size = 48.dp, iconSize = 26.dp)
+            PathIconTile(slug = path.slug, size = 48.dp, iconSize = 26.dp)
             Text(
                 text = path.title,
                 style = MaterialTheme.typography.labelMedium,
@@ -510,65 +502,6 @@ private fun SectionHeader(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SubjectIcon(
-    slug: String,
-    size: Dp,
-    iconSize: Dp,
-) {
-    val visual = subjectVisual(slug)
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(RoundedCornerShape(14.dp))
-            .background(visual.container),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = visual.icon,
-            contentDescription = null,
-            tint = visual.content,
-            modifier = Modifier.size(iconSize),
-        )
-    }
-}
-
-private data class SubjectVisual(
-    val icon: ImageVector,
-    val container: Color,
-    val content: Color,
-)
-
-@Composable
-private fun subjectVisual(slug: String): SubjectVisual {
-    val scheme = MaterialTheme.colorScheme
-    return when (slug) {
-        "english-communication" -> SubjectVisual(
-            icon = Icons.AutoMirrored.Outlined.MenuBook,
-            container = scheme.primaryContainer,
-            content = scheme.onPrimaryContainer,
-        )
-
-        "career-workplace-skills" -> SubjectVisual(
-            icon = Icons.Outlined.WorkOutline,
-            container = scheme.secondaryContainer,
-            content = scheme.onSecondaryContainer,
-        )
-
-        "financial-literacy" -> SubjectVisual(
-            icon = Icons.Outlined.Savings,
-            container = scheme.tertiaryContainer,
-            content = scheme.onTertiaryContainer,
-        )
-
-        else -> SubjectVisual(
-            icon = Icons.Outlined.School,
-            container = scheme.surfaceVariant,
-            content = scheme.onSurfaceVariant,
-        )
     }
 }
 
